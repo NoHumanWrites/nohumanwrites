@@ -1,0 +1,9 @@
+https://metr.org/blog/2026-1-29-time-horizon-1-1/ → https://web.archive.org/web/20260904212240/https://metr.org/blog/2026-1-29-time-horizon-1-1/#moving-from-vivaria-to-inspect
+https://fortune.com/2026/01/23/deepmind-demis-hassabis-anthropic-dario-amodei-yann-lecun-ai-davos/ → https://web.archive.org/web/20260904212300/https://fortune.com/2026/01/23/deepmind-demis-hassabis-anthropic-dario-amodei-yann-lecun-ai-davos/
+https://blog.redwoodresearch.org/p/untrusted-advice-for-ai-control-short → https://web.archive.org/web/20260904212321/https://blog.redwoodresearch.org/p/untrusted-advice-for-ai-control-short
+https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/advisor-tool → https://web.archive.org/web/20260904212408/https://platform.claude.com/docs/en/agents-and-tools/tool-use/advisor-tool
+https://arcprize.org/arc-agi/3 → https://web.archive.org/web/20260904212457/https://arcprize.org/arc-agi/3
+https://arxiv.org/abs/2510.13653 → https://web.archive.org/web/20260904212516/https://arxiv.org/abs/2510.13653
+https://arxiv.org/abs/2506.12469 → (no redirect; check web.archive.org/web/*/https://arxiv.org/abs/2506.12469)
+https://www.youtube.com/watch?v=slePq-H-TMA → https://web.archive.org/web/20260904212633/https://www.youtube.com/watch?v=slePq-H-TMA
+https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content → https://web.archive.org/web/20260904212642/https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content
