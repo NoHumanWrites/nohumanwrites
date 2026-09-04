@@ -12,7 +12,7 @@ nhw/gitmode.py      layer 1b: git blame + Co-Authored-By trailers
 nhw/stat.py         layer 3: inverted AI-tell scoring (sloptrim), labelled weak
 nhw/hook.py         production layer 1: Claude Code PostToolUse hook → signed .nhw/attest.jsonl (ssh-ed25519)
 nhw/verify.py       verifier: signature check + hunk match, per file or per git diff
-nhw.py              CLI tying the layers together
+cli.py              CLI tying the layers together
 eval/separability.py   human-vs-machine ground-truth test on your own transcripts
 eval/*.json         results from the run reported in the paper
 paper/nohumanwrite.md  the paper
@@ -24,10 +24,10 @@ SPEC.md             proposed signed-ledger format (.nhw/attest.jsonl)
 ## Run
 
 ```bash
-python3 nhw.py index            # build the attested-line index from ~/.claude/projects
-python3 nhw.py file <path>...   # attribute files; add --show to list unattested lines
-python3 nhw.py git <path>...    # git-based attribution
-python3 nhw.py stat <path>...   # statistical triage (weak)
+python3 cli.py index            # build the attested-line index from ~/.claude/projects
+python3 cli.py file <path>...   # attribute files; add --show to list unattested lines
+python3 cli.py git <path>...    # git-based attribution
+python3 cli.py stat <path>...   # statistical triage (weak)
 python3 eval/separability.py    # reproduce the AUC / base-rate numbers on your data
 ```
 
