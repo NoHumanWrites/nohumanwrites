@@ -1,4 +1,4 @@
-# NoHumanWrite — video / podcast outline
+# NoHumanWrites — video / podcast outline
 
 Target: 8–10 minutes, one talking head plus screen, published with the paper.
 

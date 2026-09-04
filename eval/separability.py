@@ -7,7 +7,7 @@ AI corpus     = what Claude answered (assistant text blocks, 40-300 words).
 Both scored with the sloptrim AI-tell detector.  Reports distributions + AUC.
 """
 import json, glob, os, sys, random, re, subprocess, statistics as st
-sys.path.insert(0, os.path.expanduser("~/nohumanwrite"))
+sys.path.insert(0, os.path.expanduser("~/nohumanwrites"))
 from nhw.stat import sloptrim_score, burstiness
 random.seed(7)
 human, ai = [], []
@@ -47,4 +47,4 @@ res = {"n_human": len(hs), "n_ai": len(as_),
        "auc_sloptrim_ai_vs_human": auc(as_, hs), "auc_burstiness_human_vs_ai": auc(hb, ab),
        "human_flagged_at_threshold_20": round(sum(h < 20 for h in hs)/len(hs), 3),
        "ai_flagged_as_human_at_threshold_20": round(sum(a < 20 for a in as_)/len(as_), 3)}
-print(json.dumps(res, indent=1)); json.dump(res, open(os.path.expanduser("~/nohumanwrite/eval/separability.json"), "w"), indent=1)
+print(json.dumps(res, indent=1)); json.dump(res, open(os.path.expanduser("~/nohumanwrites/eval/separability.json"), "w"), indent=1)

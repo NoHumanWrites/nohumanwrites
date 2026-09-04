@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NoHumanWrite — layer 1: provenance by construction.
+"""NoHumanWrites — layer 1: provenance by construction.
 
 Every byte an agent writes through Claude Code passes through a logged tool
 call (Write / Edit).  Those logs live in ~/.claude/projects/**/*.jsonl.  This
@@ -13,7 +13,7 @@ import hashlib, json, os, sys, glob, re
 from collections import defaultdict
 
 LOGDIR = os.path.expanduser("~/.claude/projects")
-CACHE = os.path.expanduser("~/nohumanwrite/eval/attested-index.json")
+CACHE = os.path.expanduser("~/nohumanwrites/eval/attested-index.json")
 
 def norm(line: str) -> str:
     return re.sub(r"\s+", " ", line.strip())

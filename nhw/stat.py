@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NoHumanWrite — layer 3: statistical fallback (weak, labelled as such).
+"""NoHumanWrites — layer 3: statistical fallback (weak, labelled as such).
 
 Wraps the local sloptrim detector (71 documented AI-writing patterns, stdlib
 only) and INVERTS it: a passage with almost no AI tells inside a document that

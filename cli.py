@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nhw — NoHumanWrite command line.
+"""nhw — NoHumanWrites command line.
 
   nhw.py index                 build/refresh the attested-line index
   nhw.py file <path>... [--show]  attribute files against the index

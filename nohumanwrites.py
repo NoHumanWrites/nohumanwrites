@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""nohumanwrite — check how much of what you use was written through an attested machine channel.
+"""nohumanwrites — check how much of what you use was written through an attested machine channel.
 
-  python3 nohumanwrite.py check <path>...        score files or a directory (git diff aware)
-  python3 nohumanwrite.py check <path> --json    machine-readable
-  python3 nohumanwrite.py check <path> --badge   one-line badge for a README
-  python3 nohumanwrite.py check <path> --transcripts   score against Claude Code logs even if a ledger exists
-  python3 nohumanwrite.py setup                  create the signing key + install the Claude Code hook
+  python3 nohumanwrites.py check <path>...        score files or a directory (git diff aware)
+  python3 nohumanwrites.py check <path> --json    machine-readable
+  python3 nohumanwrites.py check <path> --badge   one-line badge for a README
+  python3 nohumanwrites.py check <path> --transcripts   score against Claude Code logs even if a ledger exists
+  python3 nohumanwrites.py setup                  create the signing key + install the Claude Code hook
 
 Evidence is used in this order, and the report says which one it found:
   1. a signed ledger in the repository (.nhw/attest.jsonl)   — exact, verifiable
@@ -83,15 +83,15 @@ def render(res, badge=False, as_json=False):
     if as_json:
         print(json.dumps(res, indent=1)); return
     if res is None:
-        print("NoHumanWrite: no provenance available here.")
+        print("NoHumanWrites: no provenance available here.")
         print("  No signed ledger in this repository and no agent transcripts on this machine.")
         print("  Writing style is not evidence (see the paper, §6), so no score is given.")
-        print("  To get one: python3 nohumanwrite.py setup   (signs every future agent edit)")
+        print("  To get one: python3 nohumanwrites.py setup   (signs every future agent edit)")
         return
     pct = 100 * (res["lines"] - res["unattested"]) / (res["lines"] or 1)
     if badge:
-        print(f"![NoHumanWrite](https://img.shields.io/badge/NoHumanWrite-{pct:.0f}%25_attested-{'2ea44f' if pct >= 90 else 'e0b23a' if pct >= 50 else 'd23a2e'})"); return
-    print(f"NoHumanWrite: {pct:.0f}% attested — {res['lines'] - res['unattested']} of {res['lines']} lines")
+        print(f"![NoHumanWrites](https://img.shields.io/badge/NoHumanWrites-{pct:.0f}%25_attested-{'2ea44f' if pct >= 90 else 'e0b23a' if pct >= 50 else 'd23a2e'})"); return
+    print(f"NoHumanWrites: {pct:.0f}% attested — {res['lines'] - res['unattested']} of {res['lines']} lines")
     print(f"  evidence: {res['evidence']}" + ("" if res["verified_signatures"] else "  (no signature check)"))
     worst = sorted((f for f in res["files"] if f["lines"]), key=lambda f: -len(f["unattested"]) / f["lines"])[:8]
     for f in worst:

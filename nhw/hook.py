@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NoHumanWrite — layer 1 in production: the signing hook.
+"""NoHumanWrites — layer 1 in production: the signing hook.
 
 Claude Code PostToolUse hook for Write / Edit.  Reads the hook event on stdin,
 hashes the text the agent just wrote, signs a canonical record with the
@@ -11,7 +11,7 @@ to ~/.nhw/hook.log and exits 0.
 
 Install (settings.json → hooks.PostToolUse):
   {"matcher": "Write|Edit",
-   "hooks": [{"type": "command", "command": "python3 ~/nohumanwrite/nhw/hook.py"}]}
+   "hooks": [{"type": "command", "command": "python3 ~/nohumanwrites/nhw/hook.py"}]}
 """
 import hashlib, json, os, re, subprocess, sys, tempfile, datetime
 

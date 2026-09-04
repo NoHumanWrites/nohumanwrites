@@ -1,16 +1,16 @@
-# NoHumanWrite
+# NoHumanWrites
 
 Find the bytes a human typed inside machine-written work.
 
-Every AI-text detector asks "did a machine write this?". In an agent-first workflow the machine writes by default, and the interesting spans are the ones a person inserted by hand without the tests, sources and logs the agent's work carries. NoHumanWrite attributes files line by line against the agent harness's own logs, falls back to git authorship, and keeps a statistical layer only as triage.
+Every AI-text detector asks "did a machine write this?". In an agent-first workflow the machine writes by default, and the interesting spans are the ones a person inserted by hand without the tests, sources and logs the agent's work carries. NoHumanWrites attributes files line by line against the agent harness's own logs, falls back to git authorship, and keeps a statistical layer only as triage.
 
 ## Try it in ten seconds
 
 ```bash
-git clone <this repo> && cd nohumanwrite
-python3 nohumanwrite.py check ~/my-project        # how much of it carries machine provenance, and which lines don't
-python3 nohumanwrite.py check ~/my-project --badge   # a README badge
-python3 nohumanwrite.py setup                     # sign every future agent edit (Claude Code hook + dedicated key)
+git clone <this repo> && cd nohumanwrites
+python3 nohumanwrites.py check ~/my-project        # how much of it carries machine provenance, and which lines don't
+python3 nohumanwrites.py check ~/my-project --badge   # a README badge
+python3 nohumanwrites.py setup                     # sign every future agent edit (Claude Code hook + dedicated key)
 ```
 
 What you get back depends on the evidence available, and the tool tells you which it used:
@@ -26,14 +26,14 @@ An unattested line means *typed by hand, or written through a channel with no ho
 Keep the number in a pull request with a two-line GitHub Action:
 
 ```yaml
-- run: python3 nohumanwrite/nohumanwrite.py check . --json > nhw.json
+- run: python3 nohumanwrites/nohumanwrites.py check . --json > nhw.json
 - run: python3 -c "import json;r=json.load(open('nhw.json'));print(f\"{100*(r['lines']-r['unattested'])/r['lines']:.0f}% attested\")"
 ```
 
 ## Layout
 
 ```
-nohumanwrite.py     the public checker: check / setup, picks the best evidence available and says which
+nohumanwrites.py     the public checker: check / setup, picks the best evidence available and says which
 nhw/attest.py       layer 1: provenance from Claude Code transcripts (Write/Edit tool calls)
 nhw/gitmode.py      layer 1b: git blame + Co-Authored-By trailers
 nhw/stat.py         layer 3: inverted AI-tell scoring (sloptrim), labelled weak
@@ -42,7 +42,7 @@ nhw/verify.py       verifier: signature check + hunk match, per file or per git 
 cli.py              CLI tying the layers together
 eval/separability.py   human-vs-machine ground-truth test on your own transcripts
 eval/*.json         results from the run reported in the paper
-paper/nohumanwrite.md  the paper
+paper/nohumanwrites.md  the paper
 business.md         the business plan
 video-outline.md    the launch video
 SPEC.md             proposed signed-ledger format (.nhw/attest.jsonl)
@@ -72,3 +72,5 @@ Standard library only. Nothing leaves the machine.
 No AI-text detector for grading people. No humaniser. No watermark removal. See paper §7.
 
 Publisher: Plus de Fun Agency (a line of PLUS DE FUN Sàrl, Geneva). Licence: Apache-2.0 (proposed).
+
+Project home: nohumanwrites.org (domain registered 2026-09-04; site to follow).

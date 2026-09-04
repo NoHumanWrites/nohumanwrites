@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NoHumanWrite — the verifier for the signed ledger.
+"""NoHumanWrites — the verifier for the signed ledger.
 
   verify.py <repo> [<file>...]      attribute files against <repo>/.nhw/attest.jsonl
   verify.py <repo> --diff [<ref>]   attribute the lines a git diff adds (default: working tree vs HEAD)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NoHumanWrite — layer 1b: git authorship.
+"""NoHumanWrites — layer 1b: git authorship.
 
 Uses `git blame` + commit trailers.  A line is machine-attested when the commit
 that introduced it carries a `Co-Authored-By: Claude …` trailer or comes from a

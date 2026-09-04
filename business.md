@@ -1,6 +1,6 @@
-# NoHumanWrite — from idea to business
+# NoHumanWrites — from idea to business
 
-Draft v0.1 · 4 September 2026 · companion to `paper/nohumanwrite.md`
+Draft v0.1 · 4 September 2026 · companion to `paper/nohumanwrites.md`
 
 ## One line
 
@@ -12,7 +12,7 @@ Three things landed in the same month. Agents write most new code on serious tea
 
 ## The wedge (first product)
 
-**NoHumanWrite for GitHub.** Install the app, add one hook to the agent harness, and every pull request gets:
+**NoHumanWrites for GitHub.** Install the app, add one hook to the agent harness, and every pull request gets:
 
 1. One number in the status check: *94 % of changed bytes machine-attested*.
 2. The unattested hunks highlighted inline, with the reason (no signature / signature mismatch / unlogged channel).
@@ -73,6 +73,6 @@ Cost to reach week 4: developer time plus under $100 in hosting. The proof of co
 
 ## Decision points for Arnaud
 
-- Name: decided 2026-09-04, **NoHumanWrite** for paper and product.
-- Entity: decided 2026-09-04. NoHumanWrite is the first product of **Plus de Fun Agency**, a new sub-entity of PLUS DE FUN Sàrl (Geneva) set up for it: own invoice series (PFA-), own cost lines; branch registration and a purpose extension of the Sàrl bundled at the first paying client.
+- Name: decided 2026-09-04, **NoHumanWrites** for paper and product.
+- Entity: decided 2026-09-04. NoHumanWrites is the first product of **Plus de Fun Agency**, a new sub-entity of PLUS DE FUN Sàrl (Geneva) set up for it: own invoice series (PFA-), own cost lines; branch registration and a purpose extension of the Sàrl bundled at the first paying client.
 - Go on the arXiv submission: needs an endorsement for cs.SE if the account has none; a first-time submitter typically waits one to two days for moderation.

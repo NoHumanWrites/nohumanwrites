@@ -1,4 +1,4 @@
-# NoHumanWrite ledger — proposed format v0.1
+# NoHumanWrites ledger — proposed format v0.1
 
 File: `.nhw/attest.jsonl` at the repository root. One JSON object per line, append-only. Committed with the code, or pushed to the verifier; either works.
 

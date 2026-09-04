@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NoHumanWrite — one-time setup on a developer machine.
+# NoHumanWrites — one-time setup on a developer machine.
 # Makes a DEDICATED ed25519 signing key (not your SSH login key), registers it as an
 # allowed signer, and runs a smoke test of the hook + verifier.  Re-runnable.
 set -euo pipefail
