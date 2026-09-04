@@ -1,0 +1,32 @@
+{
+ "n_human": 150,
+ "n_ai": 150,
+ "sloptrim_score_p10_p50_p90": {
+  "human": [
+   0,
+   0,
+   8
+  ],
+  "ai": [
+   0,
+   18,
+   25
+  ]
+ },
+ "burstiness_p10_p50_p90": {
+  "human": [
+   0.282,
+   0.578,
+   0.938
+  ],
+  "ai": [
+   0.292,
+   0.596,
+   0.956
+  ]
+ },
+ "auc_sloptrim_ai_vs_human": 0.912,
+ "auc_burstiness_human_vs_ai": 0.483,
+ "human_flagged_at_threshold_20": 0.993,
+ "ai_flagged_as_human_at_threshold_20": 0.6
+}

@@ -1,0 +1,227 @@
+<title>NoHumanWrite</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F5F7F6; --surface:#FFFFFF; --ink:#16211F; --muted:#5C6B67; --rule:#D5DDDA;
+  --accent:#0E6F6A; --accent-ink:#FFFFFF;
+  --att-bg:#DDF3E4; --att-ink:#1B6B3A; --un-bg:#FBE9D0; --un-ink:#8A4B08;
+  --code-bg:#EDF1EF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1514; --surface:#161E1C; --ink:#E6EDEA; --muted:#93A39E; --rule:#26312E;
+    --accent:#5FD0C6; --accent-ink:#0F1514;
+    --att-bg:#143B26; --att-ink:#8FE0AE; --un-bg:#4A2E0E; --un-ink:#F2C48B;
+    --code-bg:#1B2624;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1514; --surface:#161E1C; --ink:#E6EDEA; --muted:#93A39E; --rule:#26312E;
+  --accent:#5FD0C6; --accent-ink:#0F1514;
+  --att-bg:#143B26; --att-ink:#8FE0AE; --un-bg:#4A2E0E; --un-ink:#F2C48B;
+  --code-bg:#1B2624;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.55;margin:0}
+.wrap{max-width:72ch;margin:0 auto;padding:40px 20px 80px}
+h1,h2,h3{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:500;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,6vw,3.6rem);letter-spacing:-.01em}
+h2{font-size:1.7rem;margin-top:56px;margin-bottom:14px}
+h3{font-size:1.2rem;margin-top:28px;margin-bottom:8px;font-weight:600}
+p{margin:0 0 16px}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.dek{font-family:"Newsreader",Georgia,serif;font-size:1.35rem;line-height:1.35;color:var(--ink);margin:18px 0 8px;font-style:italic;font-weight:400}
+.byline{color:var(--muted);font-size:.95rem;margin-bottom:36px}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+code{font-size:.88em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:4px;overflow-x:auto;font-size:.85rem;line-height:1.5;margin:0 0 18px}
+pre code{background:none;padding:0}
+
+/* the diff: the thesis in the subject's own material */
+.diff{border:1px solid var(--rule);border-radius:4px;overflow-x:auto;background:var(--surface);margin:8px 0 10px}
+.diff table{border-collapse:collapse;width:100%;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82rem;line-height:1.5;min-width:560px}
+.diff td{padding:0 12px;white-space:pre;vertical-align:top}
+.diff td.n{width:1%;text-align:right;color:var(--muted);user-select:none;padding-left:14px;font-variant-numeric:tabular-nums}
+.diff td.g{width:1%;font-weight:600;user-select:none;text-align:center}
+.diff tr.att td{background:var(--att-bg)} .diff tr.att td.g{color:var(--att-ink)}
+.diff tr.un td{background:var(--un-bg)} .diff tr.un td.g{color:var(--un-ink)}
+.diff tr.hd td{color:var(--muted);background:var(--code-bg);padding-top:6px;padding-bottom:6px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-bottom:28px}
+.legend span b{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:-2px;margin-right:6px}
+
+.figs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0 8px}
+.fig{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 14px}
+.fig .num{font-family:"Newsreader",Georgia,serif;font-size:2.6rem;line-height:1;font-weight:500;font-variant-numeric:tabular-nums}
+.fig .num.att{color:var(--att-ink)} .fig .num.un{color:var(--un-ink)}
+.fig .lab{font-size:.9rem;color:var(--muted);margin-top:8px;line-height:1.35}
+@media (max-width:620px){.figs{grid-template-columns:1fr}}
+
+table.data{border-collapse:collapse;width:100%;font-size:.92rem;margin:10px 0 18px;font-variant-numeric:tabular-nums}
+table.data th,table.data td{padding:7px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+table.data th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+table.data td.r,table.data th.r{text-align:right}
+.tablewrap{overflow-x:auto}
+
+.chart{margin:10px 0 6px}
+.chart svg{width:100%;height:auto;display:block}
+.cap{font-size:.85rem;color:var(--muted);margin-bottom:22px}
+
+.layers{border-left:3px solid var(--accent);padding-left:18px;margin:16px 0 22px}
+.layers p{margin-bottom:12px}
+.callout{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;margin:18px 0 22px}
+.callout pre{margin:8px 0 8px}
+ol.refs{padding-left:22px;font-size:.92rem;color:var(--ink)} ol.refs li{margin-bottom:6px}
+.rule-note{font-size:.9rem;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: no-preference){ .diff tr.un td{transition:background .3s} }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Draft v0.1 · 4 September 2026 · paper + proof of concept</div>
+  <h1>NoHumanWrite</h1>
+  <p class="dek">Every detector asks whether a machine wrote this. For a team that writes with agents, the useful question is the other one: which bytes did a person type by hand, and did anyone look at them twice?</p>
+  <p class="byline">Arnaud Chrétien · code and data in <code>~/nohumanwrite</code> · Apache-2.0 proposed</p>
+
+  <div class="diff" aria-label="Illustrative diff with attestation gutter">
+    <table>
+      <tr class="hd"><td class="n"></td><td class="g"></td><td>@@ src/router.py  hunk 120–148  ·  ledger .nhw/attest.jsonl  ·  27 of 29 lines attested</td></tr>
+      <tr class="att"><td class="n">131</td><td class="g">A</td><td>def route(job: Job) -&gt; Worker:</td></tr>
+      <tr class="att"><td class="n">132</td><td class="g">A</td><td>    if job.private or job.size &gt; BULK:</td></tr>
+      <tr class="att"><td class="n">133</td><td class="g">A</td><td>        return pick_specialist(job)</td></tr>
+      <tr class="un"><td class="n">134</td><td class="g">?</td><td>    if job.owner == "arnaud": return LOCAL   # quick fix, 23:40</td></tr>
+      <tr class="att"><td class="n">135</td><td class="g">A</td><td>    try:</td></tr>
+      <tr class="att"><td class="n">136</td><td class="g">A</td><td>        return default_worker(job)</td></tr>
+      <tr class="un"><td class="n">137</td><td class="g">?</td><td>    except Exception: pass</td></tr>
+      <tr class="att"><td class="n">138</td><td class="g">A</td><td>    raise NoWorker(job.id)</td></tr>
+    </table>
+  </div>
+  <div class="legend">
+    <span><b style="background:var(--att-bg);border:1px solid var(--att-ink)"></b>A · machine-attested: a signed record says an agent wrote this line</span>
+    <span><b style="background:var(--un-bg);border:1px solid var(--un-ink)"></b>? · unattested: no record; typed by hand or through an unlogged channel</span>
+  </div>
+  <p class="rule-note">Illustrative hunk. The gutter is the whole product: the two lines nobody's pipeline saw are the two lines the incident report will name.</p>
+
+  <div class="figs">
+    <div class="fig"><div class="num att">96 %</div><div class="lab">median line attestation on code the agent wrote inside the logged harness (63 files)</div></div>
+    <div class="fig"><div class="num un">9 %</div><div class="lab">attestation on the tool's own source, written by the same agent through a shell command the log never saw</div></div>
+    <div class="fig"><div class="num un">8 %</div><div class="lab">precision of the best statistical "no AI tell means human" rule at a 5 % human share</div></div>
+  </div>
+  <p class="cap">Measured on one developer's machine, 4 September 2026. Reproducible on any Claude Code install with <code>python3 eval/separability.py</code>.</p>
+
+  <h2>Abstract</h2>
+  <p>Deployed AI-text detectors answer one question: did a machine write this? For a team that writes with agents all day, that question is backwards. The machine is the default author. Its output arrives with a prompt, a diff, a log and usually a test run. The spans a person inserts by hand arrive with none of that, and in our experience they are where the incidents live. This paper proposes the inverted task, locating human insertions inside machine-written material, and shows why the statistical methods built for the original task cannot perform it. On 300 ground-truth passages from one developer's own agent sessions, the best local detector separates machine from human prose with an AUC of 0.91, yet 60 % of machine passages carry no detectable tell, so a "no tell means human" rule has a precision near 8 % at a realistic 5 % human share. Provenance recorded at the moment of writing has no such ceiling. A proof of concept that reconstructs line-level authorship from an agent harness's own logs attests 96 % of lines in code the agent wrote, 0 % in hand-written notes and 9 % in its own source, which the same agent produced through an unlogged shell channel. That gap defines the product: a signed, append-only authorship ledger emitted by every writing tool, verified at review time.</p>
+
+  <h2>1 · The inversion</h2>
+  <p>The public conversation about AI text runs in one direction. Schools want to know whether a student wrote the essay. Regulators want machine output labelled so citizens can tell. A video published this week captures the mood: it explains that Anthropic's Fable 5.1 now watermarks all of its text, then spends seven minutes on a recipe for laundering that text through a local model so the mark disappears [14].</p>
+  <p>Watch a working engineer for a day and the direction reverses. On the machine used for this paper, 2,716 file writes were made by an agent in five weeks, each logged with the exact bytes, the session and the timestamp. The human-typed changes over the same period left no such record. They were made in an editor, in a hurry, often after the agent had finished and the tests had passed. When something broke later, the question in the retrospective was never "did the AI write this?" It was "who touched this after the AI was done?"</p>
+  <p>That question has no tooling. We call the task NoHumanWrite, not because human writing is unwelcome but because in an agent-first workflow the human's contribution belongs in the prompt and the review, and a human byte in the artefact itself is an exception path that deserves a second look.</p>
+
+  <h2>2 · Background</h2>
+  <p><strong>Watermarks.</strong> Kirchenbauer et al. showed in 2023 that a language model can bias its token choices toward a pseudo-random "green list" at negligible quality cost, producing text a key-holder can later identify [1]. Google DeepMind's SynthID-Text refined this into tournament sampling, published in <em>Nature</em> in October 2024 [2]; generation and detection code are open source [10]. Anthropic adopted a scheme of this family for models released on or after 2 August 2026, worldwide, on every product surface, with no opt-out, to satisfy Article 50 of the EU AI Act [12, 13]. The detection key is not public.</p>
+  <p><strong>Statistical detectors.</strong> DetectGPT [5] and Binoculars [6] score text by how a reference model would have predicted it; Ghostbuster [7] trains a classifier on features from weaker models. RAID showed most of these degrade sharply under paraphrase and domain shift [8]. Sadasivan et al. gave the theoretical reason: as generated text approaches the human distribution, any detector's best performance approaches a coin flip [3]. OpenAI withdrew its own classifier in July 2023 [9]. Liang et al. found that commercial detectors flag essays by non-native English writers as machine-made at rates above 60 % [4]. That last result matters here because our task, done badly, would produce the mirror-image injustice.</p>
+  <p><strong>Provenance.</strong> For images, audio and video, C2PA defines signed Content Credentials that travel with the file [11]. There is no text profile and nothing comparable for source code at line level. Git records who committed, not who wrote.</p>
+
+  <h2>3 · What a human insertion is</h2>
+  <p>Any span in an artefact not produced by a logged machine write. In code: the hot-fix typed at 23:40, the constant changed by hand, the <code>except: pass</code> added to get a deploy through. In research writing: the sentence added to the machine's draft without a source. The harm is not that a person wrote it. The harm is that it skipped the pipeline, and the review process, having already approved the machine's pull request, waves the follow-up through. A tool that surfaces these spans does not judge them; it routes them to the review they missed.</p>
+
+  <h2>4 · Three layers, ordered by trust</h2>
+  <div class="layers">
+    <p><strong>Layer 1, provenance by construction.</strong> Every harness knows the exact bytes it writes. A hook records, per write, the file, the hunk, a hash of the normalised text, the producing model and session, and a signature from a key on the developer's machine, into an append-only ledger <code>.nhw/attest.jsonl</code>. A verifier walks the pull-request diff: covered lines are attested; the rest is reported. Proves machine authorship exactly and proves nothing about the remainder, which is the correct asymmetry.</p>
+    <p><strong>Layer 2, vendor watermarks.</strong> For text produced outside a cooperating harness. Teams running their own models can hold their own SynthID key today [10]; for Claude and Gemini output this layer waits on a vendor detection endpoint. Needs a few hundred tokens for confidence and dies under a full rewrite, but a positive result is cryptographic, not stylistic.</p>
+    <p><strong>Layer 3, statistical triage.</strong> Inside a document dense with machine patterns, the paragraph with none is the candidate insertion. Section 6 shows how weak this is. It orders a reviewer's attention and never produces a label on its own.</p>
+  </div>
+  <p>The ordering is the design. Most systems in this space start at layer 3 and hope. We start where the answer is exact and treat everything else as a fallback that announces its own uncertainty.</p>
+
+  <h2>5 · Proof of concept and results</h2>
+  <h3>5.1 Reconstructing provenance from harness logs</h3>
+  <p><code>nhw/attest.py</code> reads every Claude Code transcript under <code>~/.claude/projects</code>, extracts the <code>Write</code> and <code>Edit</code> tool calls, indexes each produced line by a hash of its normalised content, and attributes any file line by line. Index: 312 transcript files, 2,716 writes, 72,681 attested lines, covering 30 July to 4 September 2026.</p>
+  <div class="tablewrap"><table class="data">
+    <tr><th>Corpus</th><th class="r">Files</th><th class="r">Median attested</th><th class="r">Line-weighted</th><th class="r">0–20 %</th><th class="r">20–50 %</th><th class="r">50–80 %</th><th class="r">80–100 %</th></tr>
+    <tr><td>Vault tools <code>tools/*.py</code></td><td class="r">63</td><td class="r"><strong>96 %</strong></td><td class="r">68 %</td><td class="r">22</td><td class="r">2</td><td class="r">3</td><td class="r">36</td></tr>
+    <tr><td>Vault wiki <code>wiki/*.md</code></td><td class="r">285</td><td class="r">5 %</td><td class="r">23 %</td><td class="r">178</td><td class="r">19</td><td class="r">16</td><td class="r">72</td></tr>
+    <tr><td>Vault raw notes <code>raw/*.md</code></td><td class="r">100</td><td class="r">0 %</td><td class="r">18 %</td><td class="r">73</td><td class="r">0</td><td class="r">2</td><td class="r">25</td></tr>
+    <tr><td>Agent config <code>~/.claude</code></td><td class="r">5</td><td class="r">100 %</td><td class="r">94 %</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">4</td></tr>
+    <tr><td>This PoC <code>nhw/*.py</code></td><td class="r">3</td><td class="r"><strong>9 %</strong></td><td class="r">9 %</td><td class="r">3</td><td class="r">0</td><td class="r">0</td><td class="r">0</td></tr>
+  </table></div>
+
+  <div class="chart" role="img" aria-label="Files per attestation bucket for the wiki and tools corpora, showing two peaks at the extremes">
+    <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" font-family="Source Sans 3, system-ui, sans-serif" font-size="12">
+      <!-- scale: 1 file = 1px on a 180px axis for the wiki (max 178) -->
+      <line x1="60" y1="190" x2="620" y2="190" stroke="var(--rule)"/>
+      <g fill="var(--muted)">
+        <text x="60" y="210">0–20 %</text><text x="200" y="210">20–50 %</text><text x="340" y="210">50–80 %</text><text x="480" y="210">80–100 %</text>
+        <text x="8" y="16">files</text>
+      </g>
+      <!-- wiki (285 files) -->
+      <g fill="var(--un-bg)" stroke="var(--un-ink)" stroke-width="1">
+        <rect x="60" y="12" width="56" height="178"/><rect x="200" y="171" width="56" height="19"/><rect x="340" y="174" width="56" height="16"/><rect x="480" y="118" width="56" height="72"/>
+      </g>
+      <g fill="var(--ink)" text-anchor="middle" font-weight="600">
+        <text x="88" y="8" fill="var(--ink)">178</text><text x="228" y="167">19</text><text x="368" y="170">16</text><text x="508" y="114">72</text>
+      </g>
+      <!-- tools (63 files), same scale -->
+      <g fill="var(--att-bg)" stroke="var(--att-ink)" stroke-width="1">
+        <rect x="122" y="168" width="56" height="22"/><rect x="262" y="188" width="56" height="2"/><rect x="402" y="187" width="56" height="3"/><rect x="542" y="154" width="56" height="36"/>
+      </g>
+      <g fill="var(--ink)" text-anchor="middle" font-weight="600">
+        <text x="150" y="164">22</text><text x="290" y="184">2</text><text x="430" y="183">3</text><text x="570" y="150">36</text>
+      </g>
+      <g font-size="11" fill="var(--muted)">
+        <rect x="60" y="222" width="10" height="8" fill="var(--un-bg)" stroke="var(--un-ink)"/><text x="75" y="230">wiki, 285 files</text>
+        <rect x="170" y="222" width="10" height="8" fill="var(--att-bg)" stroke="var(--att-ink)"/><text x="185" y="230">tools, 63 files</text>
+      </g>
+    </svg>
+  </div>
+  <p class="cap">Files per attestation bucket. The distributions sit at the extremes: a file is either mostly attested or barely attested, because authorship is decided per file by which channel produced it. The 20–80 % middle holds 6 % of the wiki and 8 % of the tools.</p>
+  <p>Where the agent wrote code inside the logged harness during the log window, attestation is near-complete. The wiki and raw corpora are mostly unattested even though the same agent wrote most of them: their pages predate the log window or came from other harnesses (a Telegram bot, a scheduled job). Unattested means human <em>or untracked</em>, and on this machine untracked dominates.</p>
+  <p>The last row makes that point without argument. The proof of concept's own three source files were written by the agent in this session, through a shell heredoc rather than the logged write tool. The ledger saw nothing. Attestation: 9 %, all of it weak matches on generic import lines. Log forensics after the fact cannot close this gap; only a record emitted by every writing channel at write time can. That is why layer 1 in production is a hook and a signature, and the transcript reader is a demonstration.</p>
+
+  <h3>5.2 Git authorship as a cross-check</h3>
+  <p>On two wiki pages the agent wrote end to end, <code>git blame</code> reports 0 % machine authorship: a backup job commits the working tree under the human's name every six hours. On a tool the agent committed itself with <code>Co-Authored-By</code> trailers, git reports 83 % (551 of 667 lines). Git is a usable second source only where commit discipline already encodes authorship, and it inverts the truth where it does not.</p>
+
+  <h3>5.3 The statistical layer against ground truth</h3>
+  <p>The transcripts also give labelled prose: what the developer typed to the agent is human, what the agent answered is machine. We took 40–300-word passages of each with no pasted structure, removed near-duplicates, and sampled 150 of each from 310 and 2,987 unique passages. Each was scored by sloptrim 0.9.0, a local detector of 71 documented AI-writing patterns [15], and by burstiness (standard deviation of sentence length over its mean).</p>
+  <div class="tablewrap"><table class="data">
+    <tr><th>Measure</th><th class="r">Human p10 / p50 / p90</th><th class="r">Machine p10 / p50 / p90</th></tr>
+    <tr><td>sloptrim AI-tell score (0–100)</td><td class="r">0 / 0 / 8</td><td class="r">0 / 18 / 25</td></tr>
+    <tr><td>Burstiness</td><td class="r">0.28 / 0.58 / 0.94</td><td class="r">0.29 / 0.60 / 0.96</td></tr>
+  </table></div>
+  <p>AUC for machine vs human on the sloptrim score: <strong>0.912</strong>. On burstiness: 0.483, a coin flip; the folk belief that people vary sentence length more than models do does not survive a modern model's chat output. At the detector's threshold of 20, 99.3 % of human passages fall below it, which sounds like a fine human detector until one reads the other column: <strong>60 % of machine passages also fall below it</strong>. Six machine paragraphs in ten carry no tell the detector knows. One writer, one model family, chat-register prose: the numbers will move on other data. The shape will not.</p>
+
+  <h2>6 · Base rates</h2>
+  <p>Suppose a team's artefacts are 5 % human-inserted by span, a generous figure for an agent-first team. Use the measured sensitivity (0.993) and false-positive rate (0.60) of the "no tell means human" rule.</p>
+  <div class="callout"><pre><code>precision = 0.993 × 0.05 / (0.993 × 0.05 + 0.60 × 0.95) ≈ 0.08</code></pre>
+  <p style="margin:0">Fewer than one flag in twelve is a person. At a 1 % human share the figure is under 2 %. Lowering the false-positive rate to 0.10, far better than anything in the literature under paraphrase [8], still yields about 34 % precision.</p></div>
+  <p>This is the arithmetic that made classroom detectors harmful [3, 4], run in the other direction. A statistical detector of authorship is only acceptable where a false result costs nothing; here a false "human" costs a review and a false "machine" hides the thing we were looking for. Provenance has no base-rate problem because it does not estimate. It reads a record written at the time.</p>
+
+  <h2>7 · Ethics and the regulatory frame</h2>
+  <p>The video that prompted this work treats the watermark as a threat and offers a laundering recipe [14]. NoHumanWrite is the mirror image. It never removes a mark. It never asserts that a person's work is machine-made, the failure mode with victims. It asserts, with a signature, that a machine's work is machine-made, and leaves the remainder unlabelled for a human to look at.</p>
+  <p>Article 50 assumes a public that wants to know what the machine wrote in order to discount it [13]. We add a second constituency that wants to know what the machine wrote in order to trust it, and to spend scarce attention on the rest. The same marks serve both. Two design rules follow: the ledger records a machine key, never a person's name, so the reviewer sees "unattested", not a colleague; and the tool ships with no humaniser, rewrite or removal mode, so it cannot be turned around and pointed at the people Article 50 protects.</p>
+
+  <h2>8 · From paper to product</h2>
+  <p>The wedge is a pull-request check for teams that already write with agents. Install a GitHub App, add one hook to the harness, and each pull request shows the share of changed bytes that is machine-attested, highlights the unattested hunks, and applies a policy the team chose: comment, require a second approver, require a test that touches the file, or block. The ledger stays in the repository as plain JSON; only the numbers leave. Pricing in the plan: $12 per seat per month, free for public repositories, a compliance tier for teams whose auditors now ask which parts the AI wrote.</p>
+  <p>The honest test is not the AUC. It is whether the number on the pull request changes one review decision a week on a real team. Five design partners will tell us within a month.</p>
+
+  <h2>9 · Open questions</h2>
+  <p>Formatters rewrite attested lines without changing meaning: hash at token level, or re-attest after a formatter the harness itself invoked? Agents that edit through shell commands, as ours did, need the hook at the file-system or git-index level: where is the right choke point? What token count does Anthropic's watermark need, and will a detection endpoint accept short code hunks at all? Should a span a human reviewed and approved be marked differently from one nobody looked at?</p>
+
+  <h2>References</h2>
+  <ol class="refs">
+    <li>Kirchenbauer, Geiping, Wen, Katz, Miers, Goldstein. <em>A Watermark for Large Language Models.</em> <a href="https://arxiv.org/abs/2301.10226">arXiv:2301.10226</a>, 2023.</li>
+    <li>Dathathri et al. <em>Scalable watermarking for identifying large language model outputs.</em> <a href="https://www.nature.com/articles/s41586-024-08025-4">Nature</a>, October 2024.</li>
+    <li>Sadasivan, Kumar, Balasubramanian, Wang, Feizi. <em>Can AI-Generated Text be Reliably Detected?</em> <a href="https://arxiv.org/abs/2303.11156">arXiv:2303.11156</a>, 2023.</li>
+    <li>Liang, Yuksekgonul, Mao, Wu, Zou. <em>GPT detectors are biased against non-native English writers.</em> <a href="https://arxiv.org/abs/2304.02819">arXiv:2304.02819</a>, 2023.</li>
+    <li>Mitchell, Lee, Khazatsky, Manning, Finn. <em>DetectGPT.</em> <a href="https://arxiv.org/abs/2301.11305">arXiv:2301.11305</a>, 2023.</li>
+    <li>Hans et al. <em>Spotting LLMs With Binoculars.</em> <a href="https://arxiv.org/abs/2401.12070">arXiv:2401.12070</a>, 2024.</li>
+    <li>Verma, Fleisig, Tomlin, Klein. <em>Ghostbuster.</em> <a href="https://arxiv.org/abs/2305.15047">arXiv:2305.15047</a>, 2023.</li>
+    <li>Dugan et al. <em>RAID: A Shared Benchmark for Robust Evaluation of Machine-Generated Text Detectors.</em> <a href="https://arxiv.org/abs/2405.07940">arXiv:2405.07940</a>, 2024.</li>
+    <li>OpenAI. <em>New AI classifier for indicating AI-written text.</em> 31 January 2023; withdrawn 20 July 2023.</li>
+    <li>Google DeepMind. <em>synthid-text.</em> <a href="https://github.com/google-deepmind/synthid-text">github.com/google-deepmind/synthid-text</a>, Apache-2.0.</li>
+    <li>C2PA. <em>Technical Specification 2.2: Content Credentials.</em> <a href="https://c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html">c2pa.org</a>.</li>
+    <li>Anthropic Help Center. <em>How Claude marks AI-generated content.</em> Article 16266773, accessed 14 August 2026.</li>
+    <li>Regulation (EU) 2024/1689 (AI Act), Article 50, applicable from 2 August 2026.</li>
+    <li>Chase AI. <em>Fable 5.1 Watermarks EVERYTHING, Here's How To Remove It.</em> <a href="https://www.youtube.com/watch?v=slePq-H-TMA">YouTube slePq-H-TMA</a>, 10:14.</li>
+    <li>sloptrim 0.9.0. Local detector of 71 documented AI-writing patterns, Apache-2.0.</li>
+  </ol>
+</div>
