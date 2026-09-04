@@ -82,7 +82,11 @@ def main():
         "path": os.path.relpath(path, root),
         "hunk": {"start": span[0] if span else None, "end": span[1] if span else None,
                  "lines": hunk_text.count("\n") + 1,
-                 "sha256": hashlib.sha256(hunk_text.encode()).hexdigest()},
+                 "sha256": hashlib.sha256(hunk_text.encode()).hexdigest(),
+                 # per-line hashes let the verifier keep covering lines after a later edit
+                 # or formatter breaks the whole-hunk match (short lines carry no authorship)
+                 "line_sha": [hashlib.sha256(l.strip().encode()).hexdigest()[:16]
+                              for l in hunk_text.split("\n") if len(l.strip()) >= 12]},
         "producer": {"kind": "agent", "harness": "claude-code", "tool": ev["tool_name"],
                      "session": ev.get("session_id")},
         "signer": "ssh-ed25519:" + fingerprint(),

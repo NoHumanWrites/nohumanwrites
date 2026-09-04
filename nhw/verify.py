@@ -68,6 +68,12 @@ def attested_lines(repo: str, rel: str, records, signers):
                 covered.update(range(i + 1, i + n + 1)); hit = True; break
         if not hit:
             stale += 1
+            # whole hunk moved or was edited: fall back to the signed per-line hashes
+            want_lines = set(r["hunk"].get("line_sha") or [])
+            if want_lines:
+                for i, l in enumerate(lines, 1):
+                    if len(l.strip()) >= 12 and hashlib.sha256(l.strip().encode()).hexdigest()[:16] in want_lines:
+                        covered.add(i)
     return covered, verified, stale
 
 def report_file(repo, rel, records, signers, added=None):

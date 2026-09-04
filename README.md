@@ -4,9 +4,36 @@ Find the bytes a human typed inside machine-written work.
 
 Every AI-text detector asks "did a machine write this?". In an agent-first workflow the machine writes by default, and the interesting spans are the ones a person inserted by hand without the tests, sources and logs the agent's work carries. NoHumanWrite attributes files line by line against the agent harness's own logs, falls back to git authorship, and keeps a statistical layer only as triage.
 
+## Try it in ten seconds
+
+```bash
+git clone <this repo> && cd nohumanwrite
+python3 nohumanwrite.py check ~/my-project        # how much of it carries machine provenance, and which lines don't
+python3 nohumanwrite.py check ~/my-project --badge   # a README badge
+python3 nohumanwrite.py setup                     # sign every future agent edit (Claude Code hook + dedicated key)
+```
+
+What you get back depends on the evidence available, and the tool tells you which it used:
+
+| Evidence found | What the score means |
+|---|---|
+| A signed ledger (`.nhw/attest.jsonl`) in the repository | Exact and verifiable: every scored line either sits in a signed, still-matching machine hunk or it doesn't |
+| Claude Code transcripts on this machine | Exact for writes the harness logged, but unsigned; covers only the log window |
+| Neither | No score. Writing style is not evidence (paper §6), so the tool says "no provenance" and shows how to get some |
+
+An unattested line means *typed by hand, or written through a channel with no hook*. The tool never claims a line is human.
+
+Keep the number in a pull request with a two-line GitHub Action:
+
+```yaml
+- run: python3 nohumanwrite/nohumanwrite.py check . --json > nhw.json
+- run: python3 -c "import json;r=json.load(open('nhw.json'));print(f\"{100*(r['lines']-r['unattested'])/r['lines']:.0f}% attested\")"
+```
+
 ## Layout
 
 ```
+nohumanwrite.py     the public checker: check / setup, picks the best evidence available and says which
 nhw/attest.py       layer 1: provenance from Claude Code transcripts (Write/Edit tool calls)
 nhw/gitmode.py      layer 1b: git blame + Co-Authored-By trailers
 nhw/stat.py         layer 3: inverted AI-tell scoring (sloptrim), labelled weak

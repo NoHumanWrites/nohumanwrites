@@ -207,6 +207,13 @@ ol.refs{padding-left:22px;font-size:.92rem;color:var(--ink)} ol.refs li{margin-b
   <h2>8 · From paper to product</h2>
   <p>The wedge is a pull-request check for teams that already write with agents. Install a GitHub App, add one hook to the harness, and each pull request shows the share of changed bytes that is machine-attested, highlights the unattested hunks, and applies a policy the team chose: comment, require a second approver, require a test that touches the file, or block. The ledger stays in the repository as plain JSON; only the numbers leave. Pricing in the plan: $12 per seat per month, free for public repositories, a compliance tier for teams whose auditors now ask which parts the AI wrote.</p>
   <p>The honest test is not the AUC. It is whether the number on the pull request changes one review decision a week on a real team. Five design partners will tell us within a month.</p>
+  <h3>Try it</h3>
+  <p>The repository ships a single-file checker for anyone who writes with an agent. <code>python3 nohumanwrite.py check &lt;path&gt;</code> scores a file, a directory or a repository, lists the unattested lines, and states which evidence it used, in this order: a signed ledger in the repository (exact, verifiable); the agent harness's own logs on the machine (exact for logged writes, unsigned); or neither, in which case it reports "no provenance" and refuses to score, because writing style is not evidence (§6). <code>python3 nohumanwrite.py setup</code> creates the dedicated signing key and installs the hook so every later agent edit is signed; <code>--badge</code> prints a README badge, <code>--json</code> feeds a CI check. Run on this paper's own repository the evening the hook was installed, it reported 5 % attested: the ledger had existed for an hour and most files predate it, which is the coverage lesson of §5, delivered by the tool about itself.</p>
+  <pre><code>$ python3 nohumanwrite.py check ~/my-project
+NoHumanWrite: 92% attested — 4,118 of 4,476 lines
+  evidence: signed ledger (.nhw/attest.jsonl)
+  src/router.py: 2 unattested line(s) → [134, 137]
+  unattested = typed by hand, or written through a channel with no hook. Review those first.</code></pre>
 
   <h2>9 · Open questions</h2>
   <p>Formatters rewrite attested lines without changing meaning: hash at token level, or re-attest after a formatter the harness itself invoked? Agents that edit through shell commands, as ours did, need the hook at the file-system or git-index level: where is the right choke point? What token count does Anthropic's watermark need, and will a detection endpoint accept short code hunks at all? Should a span a human reviewed and approved be marked differently from one nobody looked at?</p>

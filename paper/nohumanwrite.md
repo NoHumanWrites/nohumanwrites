@@ -122,6 +122,8 @@ The wedge is a pull-request check for teams that already write with agents. Inst
 
 The honest test of the idea is not the AUC. It is whether the number on the pull request changes one review decision a week on a real team. Five design partners will tell us within a month.
 
+**Try it.** The repository ships a single-file checker for anyone who writes with an agent: `python3 nohumanwrite.py check <path>` scores a file, a directory or a repository, lists the unattested lines, and states which evidence it used, in this order: a signed ledger in the repository (exact, verifiable), the agent harness's own logs on the machine (exact for logged writes, unsigned), or neither, in which case it reports "no provenance" and refuses to score, because writing style is not evidence (§6). `python3 nohumanwrite.py setup` creates the dedicated signing key and installs the hook so that every later agent edit is signed. `--badge` prints a README badge; `--json` feeds a CI check. Run on this paper's own repository the evening the hook was installed, it reported 5 % attested: the ledger had existed for an hour and most files predate it, which is the coverage lesson of §5 delivered by the tool about itself.
+
 ## 9. Open questions
 
 - Formatters and refactors rewrite attested hunks without changing meaning. Hash at the token level, or re-attest after a formatter run the harness itself invoked?
