@@ -1,4 +1,0 @@
-# hook smoke test
-line one of the attested block
-line two of the attested block
-a line a human typed after the agent finished

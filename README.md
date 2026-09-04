@@ -21,7 +21,7 @@ What you get back depends on the evidence available, and the tool tells you whic
 | Claude Code transcripts on this machine | Exact for writes the harness logged, but unsigned; covers only the log window |
 | Neither | No score. Writing style is not evidence (paper §6), so the tool says "no provenance" and shows how to get some |
 
-An unattested line means *typed by hand, or written through a channel with no hook*. The tool never claims a line is human.
+An unattested line means *typed by hand, or written through a channel with no hook*. The tool never claims a line is human. A third state, **unverifiable**, appears when a ledger exists but none of its records verify with *your* keys; no percentage is printed then, and `--badge` is refused. The trust root is always yours (`~/.nhw/allowed_signers` or `--signers FILE`); a repository's own keys are ignored unless you pass `--trust-repo-signers`, and the output says where trust came from. Read `SECURITY.md` before trusting a number: the key proves the channel, not the author.
 
 Keep the number in a pull request with a two-line GitHub Action:
 
@@ -34,6 +34,9 @@ Keep the number in a pull request with a two-line GitHub Action:
 
 ```
 nohumanwrites.py     the public checker: check / setup, picks the best evidence available and says which
+nhw/common.py       one normalisation + repo helper shared by hook, verifier and checker (byte-stable hashes)
+SECURITY.md         the three sentences that govern every number this tool prints
+tests/test_ledger.py   12 end-to-end checks: sign, verify, hand edits, partial-line edits, duplicates, tampering, forgery, malformed records
 nhw/attest.py       layer 1: provenance from Claude Code transcripts (Write/Edit tool calls)
 nhw/gitmode.py      layer 1b: git blame + Co-Authored-By trailers
 nhw/stat.py         layer 3: inverted AI-tell scoring (sloptrim), labelled weak
