@@ -73,6 +73,6 @@ Cost to reach week 4: developer time plus under $100 in hosting. The proof of co
 
 ## Decision points for Arnaud
 
-- Name: keep **NoHumanWrite** (memorable, provocative) or ship the product as the softer **Attest** with NoHumanWrite as the paper's title. Recommendation: keep the name for the paper and the launch, rename only if partners object.
-- Entity: this is a parallel project, separate from Plus de Fun and LOVE&RIDE. It needs its own repository and, if it earns revenue, its own invoicing line.
+- Name: decided 2026-09-04, **NoHumanWrite** for paper and product.
+- Entity: decided 2026-09-04. NoHumanWrite is the first product of **Plus de Fun Agency**, a new sub-entity of PLUS DE FUN Sàrl (Geneva) set up for it: own invoice series (PFA-), own cost lines; branch registration and a purpose extension of the Sàrl bundled at the first paying client.
 - Go on the arXiv submission: needs an endorsement for cs.SE if the account has none; a first-time submitter typically waits one to two days for moderation.
