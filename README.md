@@ -23,6 +23,21 @@ What you get back depends on the evidence available, and the tool tells you whic
 
 An unattested line means *typed by hand, or written through a channel with no hook*. The tool never claims a line is human. A third state, **unverifiable**, appears when a ledger exists but none of its records verify with *your* keys; no percentage is printed then, and `--badge` is refused. The trust root is always yours (`~/.nhw/allowed_signers` or `--signers FILE`); a repository's own keys are ignored unless you pass `--trust-repo-signers`, and the output says where trust came from. Read `SECURITY.md` before trusting a number: the key proves the channel, not the author.
 
+## Not only code: books, lyrics, poems, sheet music
+
+The same ledger scores any text in the unit a reader edits. Code by line. Books, articles and essays by **paragraph**, with a paragraph whose sentences mostly survive reported as *edited* rather than lost. Lyrics and poetry by **verse line and stanza** (detected from the shape of the text, or force it with `--profile verse`). Sheet music by **bar** (ABC notation) or **measure** (MusicXML). Exported `.docx`, `.epub` and `.odt` files are unpacked and their paragraphs matched against the ledger, so provenance survives export. Media files are checked for a C2PA Content Credentials manifest and otherwise reported as "no provenance".
+
+Two ways text gets into the ledger. Anything Claude Code writes inside a git repository is signed by the hook. Anything you receive from an AI *elsewhere* (claude.ai, ChatGPT, a music model) you sign the moment you save it:
+
+```bash
+python3 nohumanwrites.py import chapter1.md --from claude.ai      # sign the chapter as received
+python3 nohumanwrites.py import song.txt --from suno --clipboard  # save the clipboard into song.txt, then sign it
+# ... write, rewrite, publish ...
+python3 nohumanwrites.py check chapter1.md    # → 14 paragraphs: 11 attested, 2 edited, 1 unattested (paragraph 9)
+```
+
+What this cannot do, on purpose: look at a poem nobody signed and tell you whether a person wrote it. Nothing can (paper §6). It tells you what changed after the machine's version was signed, which is the question a publisher, a co-writer or a rights holder can act on.
+
 Keep the number in a pull request with a two-line GitHub Action:
 
 ```yaml

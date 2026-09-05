@@ -8,7 +8,17 @@
   python3 nohumanwrites.py check <path> --transcripts   score against Claude Code logs even if a ledger exists
   python3 nohumanwrites.py check <path> --signers FILE  use this allowed-signers file
   python3 nohumanwrites.py check <path> --trust-repo-signers   accept the repository's own keys (prints a warning)
+  python3 nohumanwrites.py check <path> --profile prose|verse|abc|musicxml|code   override the auto-detected unit
+  python3 nohumanwrites.py import <file> --from claude.ai     sign a text you received from an AI elsewhere, as received
+  python3 nohumanwrites.py import <file> --from chatgpt --clipboard   same, saving the clipboard into <file> first
   python3 nohumanwrites.py setup                        create the signing key + install the Claude Code hook
+
+Works beyond code.  Each file is scored in the unit a reader edits: code by line; books, articles and
+essays by paragraph (a changed paragraph whose sentences mostly survive is reported as "edited"); lyrics
+and poetry by verse line and stanza; sheet music by bar (ABC notation) or measure (MusicXML).  Exported
+.docx / .epub / .odt are unpacked and their paragraphs matched against the ledger, so provenance survives
+export.  Media files (.jpg .png .pdf .mp4 .mp3 …) are checked for a C2PA Content Credentials manifest and
+otherwise reported as "no provenance"; the tool never guesses from style.
 
 Evidence is used in this order, and the report says which one it found:
   1. a signed ledger in the repository (.nhw/attest.jsonl)   — exact, verifiable with YOUR keys
@@ -26,12 +36,57 @@ __version__ = "0.1.0-rc1"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from nhw import attest, verify  # noqa: E402
-from nhw.common import MIN_LEN, norm_text, read_text, repo_root  # noqa: E402
+from nhw.common import MIN_LEN, norm_text, read_text, repo_root, profile_for, decode_text  # noqa: E402
 
 SKIP_DIRS = {"node_modules", "__pycache__", "dist", "build", ".git", ".nhw"}
+EXPORT_EXT = {".docx", ".epub", ".odt"}                       # zipped-XML documents: paragraphs are extracted
+MEDIA_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".tif", ".tiff", ".pdf", ".mp4", ".mov", ".m4a",
+             ".mp3", ".wav", ".flac", ".aiff", ".avi", ".mkv", ".mid", ".midi"}
+
+
+def extract_document(path):
+    """Paragraph text from .docx / .epub / .odt (zip of XML), or None."""
+    import html, re, zipfile
+    ext = os.path.splitext(path)[1].lower()
+    try:
+        z = zipfile.ZipFile(path)
+    except Exception:
+        return None
+    paras = []
+    def add_from_xml(xml, para_tag):
+        for m in re.finditer(rf"<{para_tag}\b.*?</{para_tag}>", xml, re.S):
+            t = re.sub(r"<[^>]+>", "", m.group(0))
+            t = html.unescape(t).strip()
+            if t:
+                paras.append(t)
+    try:
+        if ext == ".docx":
+            add_from_xml(z.read("word/document.xml").decode("utf-8", "replace"), "w:p")
+        elif ext == ".odt":
+            add_from_xml(z.read("content.xml").decode("utf-8", "replace"), "text:p")
+        elif ext == ".epub":
+            for n in sorted(z.namelist()):
+                if n.lower().endswith((".xhtml", ".html", ".htm")):
+                    xml = z.read(n).decode("utf-8", "replace")
+                    for tag in ("h1", "h2", "h3", "p"):
+                        add_from_xml(xml, tag)
+    except KeyError:
+        return None
+    return "\n\n".join(paras)
+
+
+def content_credentials(path):
+    """Does a media file carry a C2PA Content Credentials manifest?  Presence only; verify with c2patool."""
+    try:
+        with open(path, "rb") as fh:
+            head = fh.read(8_000_000)
+    except OSError:
+        return None
+    return any(m in head for m in (b"c2pa", b"contentauth", b"jumb\x00\x00\x00", b"C2PA"))
 
 
 def list_files(paths):
+    """→ (text files, exported documents, media files)."""
     out = []
     for p in paths:
         if os.path.isdir(p):
@@ -39,11 +94,20 @@ def list_files(paths):
                 dirs[:] = [d for d in dirs if not d.startswith(".") and d not in SKIP_DIRS]
                 for f in files:
                     fp = os.path.join(root, f)
-                    if not f.startswith(".") and os.path.isfile(fp) and os.path.getsize(fp) < 2_000_000:
+                    if not f.startswith(".") and os.path.isfile(fp) and os.path.getsize(fp) < 50_000_000:
                         out.append(fp)
         elif os.path.isfile(p):
             out.append(p)
-    return [f for f in out if read_text(f) is not None]
+    text, docs, media = [], [], []
+    for f in out:
+        ext = os.path.splitext(f)[1].lower()
+        if ext in EXPORT_EXT:
+            docs.append(f)
+        elif ext in MEDIA_EXT:
+            media.append(f)
+        elif os.path.getsize(f) < 2_000_000 and read_text(f) is not None:
+            text.append(f)
+    return text, docs, media
 
 
 def considered(body):
@@ -51,7 +115,7 @@ def considered(body):
     return [i for i in range(1, len(lines) + 1) if len(lines[i - 1].strip()) >= MIN_LEN]
 
 
-def check_ledger(repo, files, explicit=None, trust_repo=False):
+def check_ledger(repo, files, docs=(), explicit=None, trust_repo=False, force_profile=None):
     records, malformed = verify.load_ledger(repo)
     if not records and not malformed:
         return None
@@ -60,21 +124,58 @@ def check_ledger(repo, files, explicit=None, trust_repo=False):
     tot = un = 0; per = []; verified_total = unverified_total = 0; unverifiable_files = 0
     for f in files:
         rel = os.path.relpath(os.path.realpath(f), repo)
-        covered, verified, stale, unverified = verify.attested_lines(repo, rel, records, signers, fps)
-        verified_total += verified; unverified_total += unverified
-        cons = considered(read_text(f) or "")
-        if not cons:
+        body = read_text(f) or ""
+        profile = force_profile or profile_for(f, body)
+        if profile == "code":
+            covered, verified, stale, unverified = verify.attested_lines(repo, rel, records, signers, fps)
+            verified_total += verified; unverified_total += unverified
+            cons = considered(body)
+            if not cons:
+                continue
+            if verified == 0 and unverified > 0:
+                unverifiable_files += 1; per.append({"file": rel, "profile": profile, "units": len(cons), "state": "unverifiable"}); continue
+            u = [i for i in cons if i not in covered]
+            tot += len(cons); un += len(u)
+            per.append({"file": rel, "profile": profile, "unit": "line", "units": len(cons), "unattested": u, "state": "scored"})
+        else:
+            labels, status, verified, unverified = verify.unit_coverage(body, profile, records, signers, fps, rel)
+            verified_total += verified; unverified_total += unverified
+            if not labels:
+                continue
+            if verified == 0 and unverified > 0:
+                unverifiable_files += 1; per.append({"file": rel, "profile": profile, "units": len(labels), "state": "unverifiable"}); continue
+            u = [labels[i] for i, s in enumerate(status) if s == "unattested"]
+            e = [labels[i] for i, s in enumerate(status) if s == "edited"]
+            tot += len(labels); un += len(u)
+            per.append({"file": rel, "profile": profile, "unit": labels[0].split()[0] if labels else "unit",
+                        "units": len(labels), "unattested": u, "edited": e, "state": "scored"})
+    for d in docs:                                   # exported documents: paragraphs matched anywhere in the ledger
+        text = extract_document(d)
+        if not text:
+            per.append({"file": d, "profile": "document", "state": "unreadable"}); continue
+        labels, status, verified, unverified = verify.unit_coverage(text, "prose", records, signers, fps, None)
+        if not labels:
             continue
         if verified == 0 and unverified > 0:
-            unverifiable_files += 1; per.append({"file": rel, "lines": len(cons), "state": "unverifiable"}); continue
-        u = [i for i in cons if i not in covered]
-        tot += len(cons); un += len(u)
-        per.append({"file": rel, "lines": len(cons), "unattested": u, "state": "scored"})
+            unverifiable_files += 1; per.append({"file": d, "profile": "document", "units": len(labels), "state": "unverifiable"}); continue
+        u = [labels[i] for i, s in enumerate(status) if s == "unattested"]
+        e = [labels[i] for i, s in enumerate(status) if s == "edited"]
+        tot += len(labels); un += len(u)
+        per.append({"file": d, "profile": "document (exported; matched against the whole ledger)", "unit": "paragraph",
+                    "units": len(labels), "unattested": u, "edited": e, "state": "scored"})
     state = "scored" if tot else ("unverifiable" if unverifiable_files else "no-evidence")
     return {"state": state, "evidence": "signed ledger (.nhw/attest.jsonl)", "trust_root": src, "keys": len(fps),
             "records_valid": len(records), "records_malformed": malformed,
             "records_verified": verified_total, "records_unverified": unverified_total,
             "files_unverifiable": unverifiable_files, "lines": tot, "unattested": un, "files": per}
+
+
+def media_report(media):
+    out = []
+    for m in media:
+        cc = content_credentials(m)
+        out.append({"file": m, "content_credentials": cc})
+    return out
 
 
 def check_transcripts(files):
@@ -114,38 +215,93 @@ def render(res, badge=False, as_json=False):
     if badge:
         colour = "2ea44f" if pct >= 90 else "e0b23a" if pct >= 50 else "d23a2e"
         print(f"![NoHumanWrites](https://img.shields.io/badge/NoHumanWrites-{pct:.0f}%25_attested-{colour})"); return 0
-    print(f"NoHumanWrites: {pct:.0f}% attested — {res['lines'] - res['unattested']} of {res['lines']} lines")
+    print(f"NoHumanWrites: {pct:.0f}% attested — {res['lines'] - res['unattested']} of {res['lines']} units")
     print(f"  evidence: {res['evidence']}; trust root: {res['trust_root']}")
     if res.get("records_malformed"):
         print(f"  {res['records_malformed']} malformed ledger record(s) ignored")
     if res.get("files_unverifiable"):
         print(f"  {res['files_unverifiable']} file(s) unverifiable (records present, none verify with your keys) — not scored")
-    scored = [f for f in res["files"] if f.get("state", "scored") == "scored" and f["lines"]]
-    worst = sorted(scored, key=lambda f: -(len(f.get("unattested", [])) or f.get("unattested_count", 0)) / f["lines"])[:8]
+    scored = [f for f in res["files"] if f.get("state", "scored") == "scored" and f.get("units", f.get("lines", 0))]
+    def n_un(f): return len(f.get("unattested", [])) or f.get("unattested_count", 0)
+    worst = sorted(scored, key=lambda f: -n_un(f) / f.get("units", f.get("lines", 1)))[:8]
     for f in worst:
-        u = f.get("unattested", [])
-        n = len(u) if u else f.get("unattested_count", 0)
-        if n:
-            print(f"  {f['file']}: {n} unattested line(s)" + (f" → {u[:12]}{'…' if len(u) > 12 else ''}" if u else ""))
+        u = f.get("unattested", []); e = f.get("edited", [])
+        unit = f.get("unit", "line")
+        if n_un(f) or e:
+            where = ", ".join(str(x) for x in u[:8]) + ("…" if len(u) > 8 else "")
+            extra = f"; {len(e)} edited {unit}(s): {', '.join(str(x) for x in e[:4])}{'…' if len(e) > 4 else ''}" if e else ""
+            print(f"  {f['file']} [{f.get('profile', 'code')}]: {n_un(f)} unattested {unit}(s)" + (f" → {where}" if where else "") + extra)
     if res["unattested"] == 0:
-        print("  every considered line carries machine provenance.")
+        print("  every considered unit carries machine provenance.")
     else:
-        print("  unattested = typed by hand, or written through a channel with no hook. Review those first.")
+        print("  unattested = typed by hand, or written through a channel with no hook; edited = a signed paragraph someone changed part of. Review those first.")
+    for m in res.get("media", []):
+        cc = m["content_credentials"]
+        print(f"  {m['file']}: " + ("carries a C2PA Content Credentials manifest (provenance may be verifiable with c2patool)" if cc
+                                    else "no Content Credentials manifest found — no provenance" if cc is False else "unreadable"))
     return 0
+
+
+def _opt(args, name):
+    return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else None
 
 
 def cmd_check(args):
     flags = {a for a in args if a.startswith("--")}
-    explicit = args[args.index("--signers") + 1] if "--signers" in args else None
-    paths = [a for i, a in enumerate(args) if not a.startswith("--") and not (i > 0 and args[i - 1] == "--signers")] or ["."]
-    files = list_files(paths)
-    if not files:
-        print("nothing to check (no UTF-8 text files)"); return 2
+    explicit = _opt(args, "--signers"); profile = _opt(args, "--profile")
+    skip = {"--signers", "--profile"}
+    paths = [a for i, a in enumerate(args) if not a.startswith("--") and not (i > 0 and args[i - 1] in skip)] or ["."]
+    files, docs, media = list_files(paths)
+    if not files and not docs and not media:
+        print("nothing to check (no readable files)"); return 2
     repo = repo_root(paths[0])
-    res = None if "--transcripts" in flags else (check_ledger(repo, files, explicit, "--trust-repo-signers" in flags) if repo else None)
+    res = None if "--transcripts" in flags else (check_ledger(repo, files, docs, explicit, "--trust-repo-signers" in flags, profile) if repo else None)
     if res is None:
         res = check_transcripts(files)
+    if media:
+        if res is None or res.get("state") == "no-evidence":
+            res = {"state": "media-only", "files": [], "lines": 0, "unattested": 0}
+        res["media"] = media_report(media)
+        if res["state"] == "media-only":
+            print("NoHumanWrites: no text to score; media files checked for Content Credentials only.")
+            for m in res["media"]:
+                cc = m["content_credentials"]
+                print(f"  {m['file']}: " + ("carries a C2PA Content Credentials manifest (verify with c2patool)" if cc else "no Content Credentials manifest found — no provenance"))
+            return 0
     return render(res, badge="--badge" in flags, as_json="--json" in flags)
+
+
+def cmd_import(args):
+    """Sign the units of a file a person saved from an AI elsewhere (claude.ai, ChatGPT, a music model),
+    at the moment they receive it.  Later human edits then show up as unattested or edited."""
+    from nhw import hook
+    label = _opt(args, "--from") or "external-ai"
+    paths = [a for i, a in enumerate(args) if not a.startswith("--") and not (i > 0 and args[i - 1] == "--from")]
+    if "--clipboard" in args:
+        if not paths:
+            print("--clipboard needs a target path to save the clipboard into"); return 2
+        clip = subprocess.run(["pbpaste"] if sys.platform == "darwin" else ["xclip", "-o", "-selection", "clipboard"],
+                              capture_output=True, text=True)
+        if clip.returncode or not clip.stdout.strip():
+            print("clipboard is empty or unreadable"); return 2
+        with open(paths[0], "w", encoding="utf-8") as f:
+            f.write(clip.stdout)
+    if not paths:
+        print("usage: nohumanwrites.py import <file> [--from claude.ai|chatgpt|suno|...] [--clipboard]"); return 2
+    if not os.path.exists(hook.KEY):
+        print("no signing key yet — run: python3 nohumanwrites.py setup"); return 1
+    total = 0
+    for p in paths:
+        text = read_text(p)
+        if text is None:
+            print(f"{p}: not UTF-8 text, skipped"); continue
+        if not repo_root(p):
+            print(f"{p}: not inside a git repository (the ledger lives in the repo); run `git init` there first"); continue
+        n = hook.record_file(p, text, {"kind": "pasted-ai", "harness": label, "session": None})
+        prof = profile_for(p, text)
+        print(f"{p}: {n} signed record(s) as received from {label} [{prof} profile]")
+        total += n
+    return 0 if total else 1
 
 
 def cmd_setup():
@@ -182,6 +338,8 @@ def main(argv):
         print(__version__); return 0
     if argv[0] == "check":
         return cmd_check(argv[1:])
+    if argv[0] == "import":
+        return cmd_import(argv[1:])
     if argv[0] == "setup":
         return cmd_setup()
     print(__doc__); return 2

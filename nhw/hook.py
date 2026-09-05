@@ -19,7 +19,8 @@ from __future__ import annotations
 import base64, datetime, fcntl, json, os, re, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from nhw.common import NAMESPACE, hunk_sha, line_key, norm_text, read_text, repo_root, inside  # noqa: E402
+from nhw.common import (NAMESPACE, hunk_sha, line_key, norm_text, read_text, repo_root, inside,  # noqa: E402
+                        profile_for, unit_keys, sentence_keys)
 
 KEY = os.path.expanduser(os.environ.get("NHW_KEY", "~/.nhw/id_nhw"))
 LOG = os.path.expanduser("~/.nhw/hook.log")
@@ -84,6 +85,51 @@ def append_locked(path: str, line: str) -> None:
         fcntl.flock(fd, fcntl.LOCK_UN); os.close(fd)
 
 
+def record_file(path: str, text: str, producer: dict, root: str | None = None) -> int:
+    """Sign every unit of `text` as it sits in `path` (used by `nohumanwrites.py import` for text a
+    person received from an AI elsewhere and saved).  Returns records written."""
+    root = root or repo_root(path)
+    if not root or not inside(root, path):
+        return 0
+    body = read_text(path)
+    if body is None:
+        return 0
+    return _attest(path, root, body, [text], producer, "import")
+
+
+def _attest(path, root, body, texts, producer, tool) -> int:
+    fp = fingerprint()
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    written = 0
+    for text in texts:
+        span = whole_line_span(body, text)
+        if span is None:
+            continue                                  # text no longer in the file (overwritten since): nothing to attest
+        start, end, hunk = span
+        hunk_n = norm_text(hunk)
+        if not hunk_n or hunk_n.count("\n") + 1 > MAX_HUNK_LINES:
+            continue
+        profile = profile_for(path, body)
+        rec = {
+            "v": 1, "ts": ts,
+            "path": os.path.relpath(os.path.realpath(path), root),
+            "hunk": {"start": start, "end": end, "lines": hunk_n.count("\n") + 1,
+                     "sha256": hunk_sha(hunk), "line_sha": [k for k in (line_key(l) for l in hunk_n.split("\n")) if k]},
+            "units": {"profile": profile, "sha": unit_keys(hunk_n, profile),
+                      "sentence_sha": sentence_keys(hunk_n) if profile == "prose" else []},
+            "producer": dict(producer, tool=tool),
+            "signer": "ssh-ed25519:" + fp,
+        }
+        canonical = json.dumps(rec, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+                               allow_nan=False).encode("utf-8")
+        rec["sig"] = sign(canonical)
+        os.makedirs(os.path.join(root, ".nhw"), exist_ok=True)
+        append_locked(os.path.join(root, ".nhw", "attest.jsonl"),
+                      json.dumps(rec, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n")
+        written += 1
+    return written
+
+
 def main() -> None:
     if not os.path.exists(KEY):                       # not set up on this machine: stay silent
         return
@@ -102,32 +148,8 @@ def main() -> None:
     body = read_text(path)
     if body is None:
         return
-    fp = fingerprint()
-    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    for text in texts_from_event(ev):
-        span = whole_line_span(body, text)
-        if span is None:
-            continue                                  # text no longer in the file (overwritten since): nothing to attest
-        start, end, hunk = span
-        hunk_n = norm_text(hunk)
-        if not hunk_n or hunk_n.count("\n") + 1 > MAX_HUNK_LINES:
-            continue
-        keys = [k for k in (line_key(l) for l in hunk_n.split("\n")) if k]
-        rec = {
-            "v": 1, "ts": ts,
-            "path": os.path.relpath(os.path.realpath(path), root),
-            "hunk": {"start": start, "end": end, "lines": hunk_n.count("\n") + 1,
-                     "sha256": hunk_sha(hunk), "line_sha": keys},
-            "producer": {"kind": "agent", "harness": "claude-code", "tool": ev["tool_name"],
-                         "session": ev.get("session_id")},
-            "signer": "ssh-ed25519:" + fp,
-        }
-        canonical = json.dumps(rec, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
-                               allow_nan=False).encode("utf-8")
-        rec["sig"] = sign(canonical)
-        os.makedirs(os.path.join(root, ".nhw"), exist_ok=True)
-        append_locked(os.path.join(root, ".nhw", "attest.jsonl"),
-                      json.dumps(rec, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n")
+    _attest(path, root, body, texts_from_event(ev),
+            {"kind": "agent", "harness": "claude-code", "session": ev.get("session_id")}, ev["tool_name"])
 
 
 if __name__ == "__main__":

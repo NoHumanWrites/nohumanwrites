@@ -23,7 +23,8 @@ from __future__ import annotations
 import base64, collections, json, os, re, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from nhw.common import MIN_LEN, NAMESPACE, hunk_sha, line_key, norm_text, read_text, inside  # noqa: E402
+from nhw.common import (MIN_LEN, NAMESPACE, hunk_sha, line_key, norm_text, read_text, inside,  # noqa: E402
+                        units as split_units, sentence_keys, _key)
 
 MAX_SIG = 8192
 MAX_RECORDS_PER_FILE = 10_000
@@ -48,14 +49,59 @@ def allowed_signers(repo: str, explicit: str | None = None, trust_repo: bool = F
 def valid_record(r) -> bool:
     try:
         h = r["hunk"]
+        u = r.get("units", {"profile": "code", "sha": []})
+        ok_units = (isinstance(u, dict) and isinstance(u.get("profile"), str) and len(u["profile"]) < 20
+                    and isinstance(u.get("sha", []), list) and len(u.get("sha", [])) <= 100_000
+                    and all(isinstance(x, str) and LSHA_RE.match(x) for x in u.get("sha", []))
+                    and all(isinstance(x, str) and LSHA_RE.match(x) for x in u.get("sentence_sha", [])))
         return (r.get("v") == 1 and isinstance(r.get("path"), str) and 0 < len(r["path"]) < 4096
                 and isinstance(h.get("lines"), int) and 0 < h["lines"] <= 100_000
                 and isinstance(h.get("sha256"), str) and SHA_RE.match(h["sha256"]) is not None
                 and isinstance(h.get("line_sha", []), list) and all(isinstance(x, str) and LSHA_RE.match(x) for x in h.get("line_sha", []))
+                and ok_units
                 and isinstance(r.get("sig"), str) and 0 < len(r["sig"]) <= MAX_SIG
                 and isinstance(r.get("signer"), str))
     except (KeyError, TypeError, AttributeError):
         return False
+
+
+def unit_coverage(text: str, profile: str, records, signers, fps, rel: str | None = None):
+    """Unit-level attestation for prose / verse / abc / musicxml.
+
+    → (labels, status per unit in {"attested","edited","unattested"}, verified, unverified)
+    A unit is attested when its hash was signed (each signed hash covers at most as many units as it was
+    signed).  A prose paragraph whose own hash is gone but at least half of whose sentences are still signed
+    is "edited": someone changed part of it.  With rel=None the whole ledger is searched, for documents that
+    were exported or moved (a paragraph is distinctive enough; a code line is not, which is why the code
+    profile never does this).
+    """
+    labels_units = split_units(text, profile)
+    labels = [l for l, _ in labels_units]
+    budget, sbudget = collections.Counter(), collections.Counter()
+    verified = unverified = 0
+    for r in reversed(records):
+        if rel is not None and r["path"] != rel:
+            continue
+        u = r.get("units") or {}
+        if u.get("profile") != profile:
+            continue
+        if not sig_ok(r, signers, fps):
+            unverified += 1; continue
+        verified += 1
+        budget.update(u.get("sha", [])); sbudget.update(u.get("sentence_sha", []))
+    status = []
+    for _, utext in labels_units:
+        k = _key(utext)
+        if budget.get(k, 0) > 0:
+            budget[k] -= 1; status.append("attested"); continue
+        if profile == "prose":
+            sk = sentence_keys(utext)
+            hits = [s for s in sk if sbudget.get(s, 0) > 0]
+            if sk and len(hits) / len(sk) >= 0.5:
+                for s in hits: sbudget[s] -= 1
+                status.append("edited"); continue
+        status.append("unattested")
+    return labels, status, verified, unverified
 
 
 def fingerprints(signers: str) -> dict[str, str]:
