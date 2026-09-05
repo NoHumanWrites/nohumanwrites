@@ -1,5 +1,7 @@
 # NoHumanWrites
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22362427.svg)](https://doi.org/10.5281/zenodo.22362427)
+
 Find the bytes a human typed inside machine-written work.
 
 Every AI-text detector asks "did a machine write this?". In an agent-first workflow the machine writes by default, and the interesting spans are the ones a person inserted by hand without the tests, sources and logs the agent's work carries. NoHumanWrites attributes files line by line against the agent harness's own logs, falls back to git authorship, and keeps a statistical layer only as triage.
