@@ -242,6 +242,58 @@ def render(res, badge=False, as_json=False):
     return 0
 
 
+def stream_card(url):
+    """A provenance card for a streamed track (Spotify link): what is DECLARED by the platforms
+    versus what is VERIFIABLE.  A stream carries no file we can hash, no C2PA manifest and no
+    watermark key, so the verifiable column is empty by construction; the card says so instead of guessing."""
+    import re, urllib.parse, urllib.request
+    def get(u, headers=None):
+        req = urllib.request.Request(u, headers={"User-Agent": "NoHumanWrites/0.1", **(headers or {})})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.read().decode("utf-8", "replace")
+    m = re.search(r"open\.spotify\.com/(?:intl-[a-z]+/)?track/([A-Za-z0-9]+)", url)
+    if not m:
+        print("only open.spotify.com/track/... links are supported for now"); return 2
+    tid = m.group(1); declared = {}
+    try:
+        emb = get(f"https://open.spotify.com/embed/track/{tid}", {"User-Agent": "Mozilla/5.0"})
+        j = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', emb, re.S)
+        ent = json.loads(j.group(1))["props"]["pageProps"]["state"]["data"]["entity"]
+        declared["title"] = ent.get("name"); declared["artists"] = [a["name"] for a in ent.get("artists", [])]
+        declared["duration"] = f"{ent.get('duration', 0) // 60000}:{(ent.get('duration', 0) // 1000) % 60:02d}"
+    except Exception as e:
+        print(f"could not read the Spotify page: {e}"); return 1
+    # cross-platform declared metadata (Deezer public API): label, ISRC, contributors, catalogue size
+    try:
+        q = urllib.parse.quote(f'artist:"{declared["artists"][0]}" track:"{declared["title"]}"')
+        d = json.loads(get(f"https://api.deezer.com/search/track?q={q}")).get("data", [])
+        if d:
+            t = json.loads(get(f"https://api.deezer.com/track/{d[0]['id']}"))
+            a = json.loads(get(f"https://api.deezer.com/album/{t['album']['id']}"))
+            declared["isrc"] = t.get("isrc"); declared["release_date"] = t.get("release_date") or a.get("release_date")
+            declared["label"] = a.get("label"); declared["contributors"] = [(c.get("name"), c.get("role")) for c in t.get("contributors", [])]
+            art = json.loads(get(f"https://api.deezer.com/artist/{t['artist']['id']}"))
+            albs = json.loads(get(f"https://api.deezer.com/artist/{t['artist']['id']}/albums?limit=100")).get("data", [])
+            dates = sorted(x["release_date"] for x in albs if x.get("release_date"))
+            declared["catalogue"] = f"{art.get('nb_album')} releases on Deezer" + (f", {dates[0]} → {dates[-1]}" if dates else "") + f"; {art.get('nb_fan')} fans"
+    except Exception:
+        pass
+    print(f"NoHumanWrites — provenance card for a streamed track")
+    print(f"  {declared.get('title')} — {', '.join(declared.get('artists', []))}  ({declared.get('duration')})")
+    print("  DECLARED by the platforms (claims, not provenance):")
+    for k in ("label", "release_date", "isrc", "contributors", "catalogue"):
+        if declared.get(k) is not None:
+            print(f"    {k:13s} {declared[k]}")
+    if not any(declared.get(k) for k in ("contributors",)) or all(r in (None, "Main") for _, r in declared.get("contributors", [])):
+        print("    credits       no songwriter / composer / producer credit published on the platforms queried")
+    print("  VERIFIABLE provenance: none available.")
+    print("    no signed ledger (the writer's workflow was not instrumented), no C2PA manifest (a stream is not a file),")
+    print("    no watermark verdict (audio-model watermark keys are not public).")
+    print("  Verdict: no provenance. The declared credits are the artist's or label's statement; nothing here confirms or")
+    print("  denies a human or a machine wrote the song, and NoHumanWrites will not guess from the sound.")
+    return 3
+
+
 def _opt(args, name):
     return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else None
 
@@ -251,6 +303,8 @@ def cmd_check(args):
     explicit = _opt(args, "--signers"); profile = _opt(args, "--profile")
     skip = {"--signers", "--profile"}
     paths = [a for i, a in enumerate(args) if not a.startswith("--") and not (i > 0 and args[i - 1] in skip)] or ["."]
+    if len(paths) == 1 and paths[0].startswith(("http://", "https://")):
+        return stream_card(paths[0])
     files, docs, media = list_files(paths)
     if not files and not docs and not media:
         print("nothing to check (no readable files)"); return 2
