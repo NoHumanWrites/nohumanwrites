@@ -109,7 +109,7 @@ def main():
         # 12. the label: earned only by a signed ledger under our own keys, refused on unsigned evidence
         clean = os.path.join(repo, "clean.py"); open(clean, "w").write(BODY); hook(env, clean, content=BODY)
         r = run([sys.executable, CLI, "check", clean, "--label"], env=env)
-        assert r.returncode == 0 and "Pure AI" in r.stdout and "100% attested" in r.stdout, r.stdout + r.stderr; checks += 1
+        assert r.returncode == 0 and "AI Grade 100" in r.stdout and "Pure" in r.stdout, r.stdout + r.stderr; checks += 1
         r = run([sys.executable, CLI, "check", forged, "--label", "--trust-repo-signers"], env=env_nokeys)
         assert r.returncode == 5 and "no label" in r.stdout and "not yours" in r.stdout, r.stdout + r.stderr; checks += 1
 

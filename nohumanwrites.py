@@ -5,8 +5,10 @@
   python3 nohumanwrites.py check <path>...              score files or a directory
   python3 nohumanwrites.py check <path> --json          machine-readable
   python3 nohumanwrites.py check <path> --badge         one-line badge for a README (refused when there is no score)
-  python3 nohumanwrites.py check <path> --label         Guaranteed AI / Pure AI label (label/README.md); refused without a
-                                                        signed ledger under your own trust root, or below 90 % attested
+  python3 nohumanwrites.py check <path> --label         AI Grade label (label/README.md): the attested share as a whole
+                                                        number, banded Pure 100 / High 90-99 / Mixed 50-89; refused without
+                                                        a signed ledger under your own trust root, or below 50
+  python3 nohumanwrites.py check <path> --label --seal FILE.svg   also write the numbered seal
   python3 nohumanwrites.py check <path> --transcripts   score against Claude Code logs even if a ledger exists
   python3 nohumanwrites.py check <path> --signers FILE  use this allowed-signers file
   python3 nohumanwrites.py check <path> --trust-repo-signers   accept the repository's own keys (prints a warning)
@@ -207,30 +209,65 @@ def check_transcripts(files):
             "trust_root": "none (unsigned logs)", "lines": tot, "unattested": un, "files": per}
 
 
-def render_label(res, pct):
-    """The Guaranteed AI label (label/README.md): a grade only a signed ledger under the verifier's own trust root can earn."""
+AI_GRADE_BANDS = ((100, "Pure"), (90, "High"), (50, "Mixed"))   # label/README.md, "The scale"
+
+
+def ai_grade(res):
+    """AI Grade = attested share as a whole number, rounded DOWN (99.6 % is grade 99, never 100), plus its band."""
+    grade = (100 * (res["lines"] - res["unattested"])) // res["lines"]
+    band = next((name for floor, name in AI_GRADE_BANDS if grade >= floor), None)
+    return grade, band
+
+
+def seal_svg(grade, band, day, level="Level 1"):
+    """The numbered seal: the grade is the label, like octane on a pump."""
+    ring = f"AI GRADE {grade} · {band.upper()} · SIGNED LEDGER · VERIFIABLE · {day} ·"
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="AI Grade {grade}, {band}: {grade} percent of units came through a signed machine channel, checked {day}">
+  <title>AI Grade {grade}</title>
+  <desc>{grade} percent of scored units came through a signed machine channel that still verifies ({band} band, {level}, checked {day}). The key proves the channel, not the author. Spec: nohumanwrites.org/label</desc>
+  <defs><path id="ring" d="M120,120 m-92,0 a92,92 0 1,1 184,0 a92,92 0 1,1 -184,0"/></defs>
+  <circle cx="120" cy="120" r="116" fill="#16211F"/>
+  <circle cx="120" cy="120" r="108" fill="none" stroke="#5FD0C6" stroke-width="2"/>
+  <circle cx="120" cy="120" r="76" fill="#F5F7F6"/>
+  <text font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11" font-weight="600" letter-spacing="2.5" fill="#5FD0C6"><textPath href="#ring" startOffset="1%">{ring}</textPath></text>
+  <text x="120" y="92" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" letter-spacing="2" fill="#16211F">AI GRADE</text>
+  <text x="120" y="146" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="600" fill="#0E6F6A">{grade}</text>
+  <text x="120" y="166" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="10" letter-spacing="2" fill="#16211F">{band.upper()}</text>
+  <text x="120" y="184" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="8" letter-spacing="1.2" fill="#5C6B67">NOHUMANWRITES.ORG/LABEL</text>
+</svg>
+"""
+
+
+def render_label(res, pct, seal=None):
+    """The AI Grade label (label/README.md): a number only a signed ledger under the verifier's own trust root can earn."""
     root = res.get("trust_root", "none")
+    grade, band = ai_grade(res)
     if not res.get("evidence", "").startswith("signed ledger"):
         why = "the evidence is unsigned transcripts, not a signed ledger"
     elif root.startswith("none") or "REPOSITORY" in root.upper() or "repo" in root.lower():
         why = f"the trust root is not yours ({root}); a label needs your own allowed_signers"
-    elif pct < 90:
-        why = f"{pct:.0f}% attested is below the 90% threshold"
+    elif band is None:
+        why = f"AI Grade {grade} is below 50: most of this work did not come through a signed machine channel"
     else:
         why = None
     if why:
         print(f"NoHumanWrites: no label — {why}. The report is still the useful part; run without --label."); return 5
-    grade = "Pure AI" if res["unattested"] == 0 else "Guaranteed AI"
     day = time.strftime("%Y-%m-%d")
-    slug = grade.replace(" ", "_")
-    print(f"{grade} · {pct:.0f}% attested · checked {day} · Level 1 (self-signed) · {res['lines'] - res['unattested']} of {res['lines']} units")
-    print(f"![{grade}](https://img.shields.io/badge/{slug}-{pct:.0f}%25_attested_{day}-0E6F6A)")
-    print("Attested = came through a signed machine channel; the key proves the channel, not the author (label/README.md).")
-    print("Name the path the badge covers and publish the report (--json) next to it: https://nohumanwrites.org/label")
+    print(f"AI Grade {grade} · {band} · {res['lines'] - res['unattested']} of {res['lines']} units attested · checked {day} · Level 1 (self-signed)")
+    print(f"![AI Grade {grade}](https://img.shields.io/badge/AI_Grade-{grade}_{band}_{day}-0E6F6A)")
+    print("The grade is the share of units that came through a signed machine channel, rounded down; the key proves the channel, not the author (label/README.md).")
+    print("Name the path the grade covers and publish the report (--json) next to it: https://nohumanwrites.org/label")
+    if seal:
+        svg = seal_svg(grade, band, day)
+        open(seal, "w").write(svg)
+        # the seal is a machine write too: record it in the ledger so it does not drag down the grade it carries
+        from nhw import hook
+        n = hook.record_file(seal, svg, {"kind": "seal", "harness": "nohumanwrites", "session": None}) if os.path.exists(hook.KEY) else 0
+        print(f"seal written: {seal}" + (" (signed into the ledger)" if n else " (not signed: no key; run setup)"))
     return 0
 
 
-def render(res, badge=False, as_json=False, label=False):
+def render(res, badge=False, as_json=False, label=False, seal=None):
     if as_json:
         print(json.dumps(res, indent=1)); return 0
     if res is None or res["state"] == "no-evidence":
@@ -245,7 +282,7 @@ def render(res, badge=False, as_json=False, label=False):
         return 4
     pct = 100 * (res["lines"] - res["unattested"]) / res["lines"]
     if label:
-        return render_label(res, pct)
+        return render_label(res, pct, seal=seal)
     if badge:
         colour = "2ea44f" if pct >= 90 else "e0b23a" if pct >= 50 else "d23a2e"
         print(f"![NoHumanWrites](https://img.shields.io/badge/NoHumanWrites-{pct:.0f}%25_attested-{colour})"); return 0
@@ -485,7 +522,7 @@ def _opt(args, name):
 def cmd_check(args):
     flags = {a for a in args if a.startswith("--")}
     explicit = _opt(args, "--signers"); profile = _opt(args, "--profile"); repo_opt = _opt(args, "--repo")
-    skip = {"--signers", "--profile", "--repo"}
+    skip = {"--signers", "--profile", "--repo", "--seal"}
     paths = [a for i, a in enumerate(args) if not a.startswith("--") and not (i > 0 and args[i - 1] in skip)] or ["."]
     ledger_repo = repo_root(repo_opt) if repo_opt else None
     if len(paths) == 1 and paths[0].startswith(("http://", "https://")):
@@ -513,7 +550,8 @@ def cmd_check(args):
                 cc = m["content_credentials"]
                 print(f"  {m['file']}: " + ("carries a C2PA Content Credentials manifest (verify with c2patool)" if cc else "no Content Credentials manifest found — no provenance"))
             return 0
-    return render(res, badge="--badge" in flags, as_json="--json" in flags, label="--label" in flags)
+    return render(res, badge="--badge" in flags, as_json="--json" in flags, label="--label" in flags,
+                  seal=_opt(args, "--seal"))
 
 
 def cmd_import(args):

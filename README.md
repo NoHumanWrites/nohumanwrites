@@ -25,9 +25,9 @@ What you get back depends on the evidence available, and the tool tells you whic
 
 An unattested line means *typed by hand, or written through a channel with no hook*. The tool never claims a line is human. A third state, **unverifiable**, appears when a ledger exists but none of its records verify with *your* keys; no percentage is printed then, and `--badge` is refused. The trust root is always yours (`~/.nhw/allowed_signers` or `--signers FILE`); a repository's own keys are ignored unless you pass `--trust-repo-signers`, and the output says where trust came from. Read `SECURITY.md` before trusting a number: the key proves the channel, not the author.
 
-## The label: Guaranteed AI
+## The label: AI Grade
 
-Every mark on the market says a human made the work, on the creator's word. This one says a machine did, on a signature. `check <path> --label` prints **Pure AI** at 100 % attested or **Guaranteed AI** at 90 % or more, with the check date, and refuses when there is no signed ledger under your own keys or the share is lower. The spec, the seals and the terms are in [`label/`](label/README.md); the argument, with sources, is the white paper [`label/whitepaper.md`](label/whitepaper.md).
+Every mark on the market says a human made the work, on the creator's word. This one gives a number, on a signature: the share of the work that came through a signed machine channel, like octane on a pump. `check <path> --label` prints the grade and its band (Pure 100, High 90–99, Mixed 50–89) with the check date, `--seal file.svg` writes the numbered seal, and both are refused when there is no signed ledger under your own keys or the grade is below 50. The spec, the seals and the terms are in [`label/`](label/README.md); the argument, with sources, is the white paper [`label/whitepaper.md`](label/whitepaper.md).
 
 ## Not only code: books, lyrics, poems, sheet music
 

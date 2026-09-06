@@ -1,4 +1,4 @@
-<title>Guaranteed AI</title>
+<title>AI Grade</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 :root{
@@ -27,107 +27,71 @@ body{background:var(--bg);color:var(--ink);font-family:"Source Sans 3",system-ui
 h1,h2,h3{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:500;line-height:1.15;text-wrap:balance;margin:0}
 h1{font-size:clamp(2.4rem,6vw,3.6rem);letter-spacing:-.01em}
 h2{font-size:1.7rem;margin-top:56px;margin-bottom:14px}
-h3{font-size:1.2rem;margin-top:28px;margin-bottom:8px;font-weight:600}
 p{margin:0 0 16px}
 .eyebrow{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
 .dek{font-family:"Newsreader",Georgia,serif;font-size:1.35rem;line-height:1.35;color:var(--ink);margin:18px 0 8px;font-style:italic;font-weight:400}
-.byline{color:var(--muted);font-size:.95rem;margin-bottom:36px}
 a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
-code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+code,pre{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
 code{font-size:.88em;background:var(--code-bg);padding:1px 5px;border-radius:3px}
-pre{background:var(--code-bg);padding:14px 16px;border-radius:4px;overflow-x:auto;font-size:.85rem;line-height:1.5;margin:0 0 18px}
-pre code{background:none;padding:0}
-
-/* the diff: the thesis in the subject's own material */
-.diff{border:1px solid var(--rule);border-radius:4px;overflow-x:auto;background:var(--surface);margin:8px 0 10px}
-.diff table{border-collapse:collapse;width:100%;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82rem;line-height:1.5;min-width:560px}
-.diff td{padding:0 12px;white-space:pre;vertical-align:top}
-.diff td.n{width:1%;text-align:right;color:var(--muted);user-select:none;padding-left:14px;font-variant-numeric:tabular-nums}
-.diff td.g{width:1%;font-weight:600;user-select:none;text-align:center}
-.diff tr.att td{background:var(--att-bg)} .diff tr.att td.g{color:var(--att-ink)}
-.diff tr.un td{background:var(--un-bg)} .diff tr.un td.g{color:var(--un-ink)}
-.diff tr.hd td{color:var(--muted);background:var(--code-bg);padding-top:6px;padding-bottom:6px}
-.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-bottom:28px}
-.legend span b{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:-2px;margin-right:6px}
-
-.figs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0 8px}
-.fig{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 14px}
-.fig .num{font-family:"Newsreader",Georgia,serif;font-size:2.6rem;line-height:1;font-weight:500;font-variant-numeric:tabular-nums}
-.fig .num.att{color:var(--att-ink)} .fig .num.un{color:var(--un-ink)}
-.fig .lab{font-size:.9rem;color:var(--muted);margin-top:8px;line-height:1.35}
-@media (max-width:620px){.figs{grid-template-columns:1fr}}
-
-table.data{border-collapse:collapse;width:100%;font-size:.92rem;margin:10px 0 18px;font-variant-numeric:tabular-nums}
-table.data th,table.data td{padding:7px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
-table.data th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-table.data td.r,table.data th.r{text-align:right}
-.tablewrap{overflow-x:auto}
-
-.chart{margin:10px 0 6px}
-.chart svg{width:100%;height:auto;display:block}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:.86rem;line-height:1.5;margin:0 0 18px}
 .cap{font-size:.85rem;color:var(--muted);margin-bottom:22px}
-
-.layers{border-left:3px solid var(--accent);padding-left:18px;margin:16px 0 22px}
-.layers p{margin-bottom:12px}
-.callout{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;margin:18px 0 22px}
-.callout pre{margin:8px 0 8px}
-ol.refs{padding-left:22px;font-size:.92rem;color:var(--ink)} ol.refs li{margin-bottom:6px}
-.rule-note{font-size:.9rem;color:var(--muted)}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@media (prefers-reduced-motion: no-preference){ .diff tr.un td{transition:background .3s} }
-</style>
-<style>
 .seals{display:flex;gap:28px;flex-wrap:wrap;align-items:center;margin:28px 0}
-.seals img{width:160px;height:160px}
+.seals img{width:180px;height:180px}
 .seals .cap{max-width:420px}
-.grade{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
-.grade div{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
-.grade b{font-family:"Newsreader",Georgia,serif;font-size:1.25rem;font-weight:600;display:block;margin-bottom:6px}
-@media (max-width:640px){.grade{grid-template-columns:1fr}}
-pre{background:var(--code-bg);padding:14px 16px;border-radius:8px;overflow-x:auto;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.86rem}
+table.scale{border-collapse:collapse;width:100%;font-size:.95rem;margin:10px 0 18px;font-variant-numeric:tabular-nums}
+table.scale th,table.scale td{padding:9px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+table.scale th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+table.scale td.g{font-family:"Newsreader",Georgia,serif;font-size:1.4rem;font-weight:600;color:var(--accent);white-space:nowrap}
+table.scale td.b{font-weight:600;white-space:nowrap}
+.tablewrap{overflow-x:auto}
 .guar li{margin-bottom:10px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 <div class="wrap">
-  <div class="eyebrow">Label spec v0.1 · white paper v0.2 after an eight-model review · 6 September 2026 · Plus de Fun Agency · <a href="index.html">back to the paper</a></div>
-  <h1>Guaranteed AI</h1>
-  <p class="dek">The human-made marks say a person made the work, on the creator's word. This one says the work came through a signed machine channel, on a signature you can re-check, with every unit that did not listed beside the number. The key proves the channel, not the author.</p>
+  <div class="eyebrow">Label spec v0.2 · white paper v0.3 · 6 September 2026 · Plus de Fun Agency · <a href="index.html">back to the paper</a></div>
+  <h1>AI Grade</h1>
+  <p class="dek">A number on a piece of work: how much of it came through a signed machine channel. Petrol pumps show an octane number, gold is stamped with its purity, and this label works the same way. Anyone with the public key can recompute the grade, and every part that did not come through the channel is listed beside it. The key proves the channel, not the author.</p>
 
   <div class="seals">
-    <img src="../label/guaranteed-ai.svg" alt="Guaranteed AI seal">
-    <img src="../label/pure-ai.svg" alt="Pure AI seal">
-    <p class="cap">Two seals, two grades. Each one links to a report that anyone with the public key can re-derive. Free to display on anything that passes the check; forbidden on anything that does not.</p>
+    <img src="../label/ai-grade.svg" alt="AI Grade 100 seal, Pure band, checked 6 September 2026">
+    <p class="cap">The seal is generated with the number on its face, by the tool, on the day of the check. This one is the grade the <code>label/</code> directory earned. Free to display on anything that passes; forbidden on anything that does not.</p>
   </div>
 
-  <h2>Two grades</h2>
-  <div class="grade">
-    <div><b>Pure AI</b>100 % of scored units attested. Every line, paragraph, verse or bar sits in a signed machine hunk that still matches. Nothing typed by hand after the machine finished; nothing through an unlogged channel.</div>
-    <div><b>Guaranteed AI</b>At least 90 % attested. The machine wrote the work; the remainder, at most one unit in ten, is listed by location in the linked report. Below 90 % there is no label, and the report is still the useful part.</div>
-  </div>
-  <p>The 90 % mirrors Not By AI's "90 % rule", which asks a creator to <em>estimate</em> that at least 90 % of the content is human. Same number, opposite direction, and ours is counted by the verifier rather than estimated by the author.</p>
+  <h2>The scale</h2>
+  <div class="tablewrap"><table class="scale">
+    <tr><th>Grade</th><th>Band</th><th>Meaning</th></tr>
+    <tr><td class="g">100</td><td class="b">Pure</td><td>Every line, paragraph, verse or bar sits in a signed machine hunk that still matches. Nothing typed by hand after the machine finished, nothing through an unlogged channel.</td></tr>
+    <tr><td class="g">90–99</td><td class="b">High</td><td>The machine channel produced the work. The rest, at most one unit in ten, is listed by location in the linked report.</td></tr>
+    <tr><td class="g">50–89</td><td class="b">Mixed</td><td>Most of the work came through the channel and a large minority did not. The seal says "Mixed" on its face.</td></tr>
+    <tr><td class="g">0–49</td><td class="b">no label</td><td>Most of the work did not come through a signed channel. The report is still printed; the seal is refused.</td></tr>
+  </table></div>
+  <p>The grade is rounded down, so 99.6 % is grade 99. The lines have reasons. 100 is exact. 90 is Not By AI's "90 % rule" pointed the other way: they ask a creator to <em>estimate</em> at least 90 % human, we <em>count</em> at least 90 % through the channel. 50 is where the sentence "a machine channel produced this work" stops being true.</p>
 
   <h2>Three guarantees, four things it does not guarantee</h2>
   <ol class="guar">
     <li><strong>Every attested unit passed through a named machine channel and was signed when it was written.</strong> The record carries harness, model and session, and a signature from a key the verifier chose to trust.</li>
-    <li><strong>Every unit that did not is listed.</strong> Nothing hides behind the percentage.</li>
+    <li><strong>Every unit that did not is listed.</strong> Nothing hides behind the number.</li>
     <li><strong>Anyone with the public key gets the same number.</strong> A claim you can re-derive, not one you must believe.</li>
   </ol>
-  <p>It does not guarantee quality, correctness or safety. It does not guarantee authorship: "write exactly these lines", or an agent copying a hand-written file back into place, yields an attested hunk. It does not claim the absence of human judgement, which sits in the prompt and the review and is not made of bytes. And it is not anonymity: the ledger records a key fingerprint, never a name, but on a small team a key identifies a person by elimination, so reports aggregate per repository. A badge names the path it covers; one that does not is invalid.</p>
+  <p>It does not guarantee quality, correctness or safety. It does not guarantee authorship: "write exactly these lines", or an agent copying a hand-written file back into place, yields an attested hunk. It does not claim the absence of human judgement, which sits in the prompt and the review and is not made of bytes. And it is not anonymity: the ledger records a key fingerprint, never a name, but on a small team a key identifies a person by elimination, so reports aggregate per repository. A seal names the path it covers; one that does not is invalid.</p>
 
   <h2>Two levels</h2>
-  <p><strong>Level 1, self-signed</strong> (shipped): the author's machine key signs each hunk through the harness hook; the verifier uses its own trust root, never the repository's. <strong>Level 2, anchored</strong> (designed, not built): the ledger head recorded in a transparency log at each commit, so a deleted record leaves a visible gap. Anchoring makes the history tamper-evident; it does not make a false record true, and a key-holder can still sign anything. Taking the key-holder out of the loop needs a trusted executor outside the writer's reach, a third design the paper's §10.3 describes and nobody ships yet.</p>
+  <p><strong>Level 1, self-signed</strong> (shipped): the author's machine key signs each hunk through the harness hook; the verifier uses their own trust root, never the repository's. <strong>Level 2, anchored</strong> (designed, not built): the ledger head recorded in a public transparency log at each commit, so a deleted record leaves a visible gap. Anchoring makes the history tamper-evident; it does not make a false record true, and a key-holder can still sign anything. Taking the key-holder out of the loop needs a trusted executor outside the writer's reach, a third design the paper's §10.3 describes and nobody ships yet.</p>
 
   <h2>Earn it</h2>
-<pre>python3 nohumanwrites.py setup                 # once: hook + dedicated key
+<pre>python3 nohumanwrites.py setup                              # once: hook + dedicated key
 # ... work with the agent inside the repository ...
-python3 nohumanwrites.py check &lt;path&gt; --label  # grade, dated badge, wording
+python3 nohumanwrites.py check &lt;path&gt; --label               # grade, band, dated badge, wording
+python3 nohumanwrites.py check &lt;path&gt; --label --seal g.svg  # plus the numbered seal
 
-Pure AI · 100% attested · checked 2026-09-06 · Level 1 (self-signed) · 111 of 111 units</pre>
-  <p>Refused, with the reason printed, when there is no signed ledger, when the evidence is unsigned transcripts, when the trust root is the repository's own keys, and below 90 %. A label with no ledger behind it is the kind of mark this one exists to replace.</p>
+AI Grade 100 · Pure · 98 of 98 units attested · checked 2026-09-06 · Level 1 (self-signed)
+seal written: label/ai-grade.svg (signed into the ledger)</pre>
+  <p>Refused, with the reason printed, when there is no signed ledger, when the evidence is unsigned transcripts, when the trust root is the repository's own keys, and below grade 50. A label with no ledger behind it is the kind of mark this one exists to replace.</p>
 
-  <h2>Why a label, and what it cannot say</h2>
-  <p>Writing that comes through a logged machine channel arrives with a prompt, a diff, a log, a test run and a signature. Writing through any other channel arrives with none of those. Google's CEO said in October 2024 that "more than a quarter of all new code at Google is generated by AI, then reviewed and accepted by engineers"; reports in 2026 put the figure at three quarters. The attested share is the one per-unit record of that division a third party can check. It is a coverage statistic of logged channels. It is not a measure of autonomy, of capability or of the approach to general intelligence, and an earlier draft that called a registry of such shares a "thermometer" of that approach was wrong; eight external reviewers said so and the white paper now says what a real study of delegation would need instead. The evidence, the counter-evidence and the ways the label can be gamed are in the paper.</p>
-  <p><a href="https://github.com/NoHumanWrites/nohumanwrites/blob/main/label/whitepaper.md">White paper: <em>Guaranteed AI: a label for work the machine wrote, and why it will matter more every year</em></a> · <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/main/label/README.md">Spec and terms of use</a></p>
+  <h2>Why a number, and what it cannot say</h2>
+  <p>Writing that comes through a logged machine channel arrives with a prompt, a diff, a log, a test run and a signature. Writing through any other channel arrives with none of those. Google's CEO said in October 2024 that "more than a quarter of all new code at Google is generated by AI, then reviewed and accepted by engineers"; a report in April 2026 put the figure at three quarters. The grade is the one per-unit record of that division a third party can check. It is a coverage statistic of logged channels. It is not a measure of autonomy, of capability or of the approach to general intelligence; an earlier draft that called a registry of such numbers a "thermometer" of that approach was wrong, eight external reviewers said so, and the white paper now says what a real study of delegation would need instead. The evidence, the counter-evidence and the eleven ways the grade can be gamed are in the paper, which is written to be read by anyone.</p>
+  <p><a href="https://github.com/NoHumanWrites/nohumanwrites/blob/main/label/whitepaper.md">White paper: <em>AI Grade: a number for how much of a work came through a signed machine channel</em></a> · <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/main/label/README.md">Spec and terms of use</a></p>
 
   <h2>Applied to itself</h2>
-  <p>The NoHumanWrites repository, checked on 6 September 2026, attests at 18 % of units: most of its prose reached the disk through shell heredocs, which the hook does not see. It does not earn its own label. The <code>label/</code> directory, written through the signed channel on purpose, scores 100 %: Pure AI, though v0.1 of the paper scored 99 % and the v0.2 rewrite replaced the offending block through the signed channel, which is rewrite laundering by the paper's own §7, done in the open. Command, output, key fingerprint and tag are in §8 so anyone with the public key can rerun it.</p>
+  <p>The NoHumanWrites repository, checked on 6 September 2026, is grade 13: most of its prose reached the disk through shell heredocs, which the hook does not see. It earns no label. The <code>label/</code> directory, written through the signed channel on purpose, is grade 100, Pure. v0.1 of the paper scored 99 after a one-line edit inside a table, and every version since has been a full rewrite through the signed channel, which is rewrite laundering by the paper's own §7, done in the open. Command, output, key fingerprint and tag are in §8 so anyone with the public key can rerun it.</p>
 </div>
