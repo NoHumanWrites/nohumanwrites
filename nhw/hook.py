@@ -16,7 +16,8 @@ Never blocks the agent: any failure is logged to ~/.nhw/hook.log and exits 0.
 Silent until setup-key.sh has created the key.
 """
 from __future__ import annotations
-import base64, datetime, fcntl, json, os, re, subprocess, sys, tempfile
+import base64
+import json, datetime, fcntl, json, os, re, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from nhw.common import (NAMESPACE, hunk_sha, line_key, norm_text, read_text, repo_root, inside,  # noqa: E402
@@ -130,6 +131,31 @@ def _attest(path, root, body, texts, producer, tool) -> int:
     return written
 
 
+def _settings(path):
+    try:
+        return json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def isolation(root: str):
+    """Level 3 (local): does the effective harness configuration deny the model's shell the signing key?
+    Reads the repository's and the user's Claude Code settings; project keys win.  Returns the executor
+    claim to record, or None.  Self-reported by construction (label/level3.md)."""
+    user = _settings(os.path.expanduser("~/.claude/settings.json")).get("sandbox") or {}
+    proj = _settings(os.path.join(root, ".claude", "settings.json")).get("sandbox") or {}
+    sb = dict(user); sb.update(proj)
+    if not sb.get("enabled") or sb.get("allowUnsandboxedCommands", True) is not False:
+        return None
+    key_dir = os.path.dirname(os.path.realpath(KEY))
+    denied = [os.path.realpath(os.path.expanduser(x)) for x in (sb.get("filesystem") or {}).get("denyRead", [])]
+    denied += [os.path.realpath(os.path.expanduser(e.get("path", ""))) for e in ((sb.get("credentials") or {}).get("files") or [])
+               if e.get("mode") == "deny"]
+    if not any(os.path.realpath(KEY) == d or os.path.realpath(KEY).startswith(d.rstrip("/") + "/") or key_dir == d for d in denied):
+        return None
+    return {"kind": "harness-hook", "isolation": "sandbox-denies-key", "self_reported": True}
+
+
 def main() -> None:
     if not os.path.exists(KEY):                       # not set up on this machine: stay silent
         return
@@ -148,8 +174,11 @@ def main() -> None:
     body = read_text(path)
     if body is None:
         return
-    _attest(path, root, body, texts_from_event(ev),
-            {"kind": "agent", "harness": "claude-code", "session": ev.get("session_id")}, ev["tool_name"])
+    producer = {"kind": "agent", "harness": "claude-code", "session": ev.get("session_id")}
+    iso = isolation(root)
+    if iso:
+        producer["executor"] = iso
+    _attest(path, root, body, texts_from_event(ev), producer, ev["tool_name"])
 
 
 if __name__ == "__main__":

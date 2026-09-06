@@ -143,6 +143,15 @@ def main():
         assert "Level 1" in r.stdout and "prefix no longer matches" in r.stdout, r.stdout + r.stderr; checks += 1
         srv.shutdown()
 
+        # 16. Level 3 (local): the hook records an executor claim only when the effective settings deny it the key
+        iso = os.path.join(repo, "iso.py"); open(iso, "w").write(BODY); hook(env, iso, content=BODY)
+        assert "executor" not in open(ledger).read().splitlines()[-1], "executor claimed without a sandbox"; checks += 1
+        os.makedirs(os.path.join(repo, ".claude")); json.dump({"sandbox": {"enabled": True, "allowUnsandboxedCommands": False,
+            "credentials": {"files": [{"path": os.path.dirname(key), "mode": "deny"}]}}}, open(os.path.join(repo, ".claude", "settings.json"), "w"))
+        open(iso, "w").write(BODY + "x = 1\n"); hook(env, iso, content=BODY + "x = 1\n")
+        last = json.loads(open(ledger).read().splitlines()[-1])
+        assert last["producer"].get("executor", {}).get("self_reported") is True, last["producer"]; checks += 1
+
         print(f"ok: {checks} checks passed")
         return 0
     finally:

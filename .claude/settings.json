@@ -1,0 +1,23 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "allowUnsandboxedCommands": false,
+    "failIfUnavailable": true,
+    "credentials": {
+      "files": [
+        {
+          "path": "~/.nhw",
+          "mode": "deny"
+        }
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "rekor.sigstore.dev"
+      ]
+    },
+    "excludedCommands": [
+      "gh"
+    ]
+  }
+}

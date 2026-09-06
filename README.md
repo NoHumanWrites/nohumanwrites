@@ -71,13 +71,14 @@ Keep the number in a pull request with a two-line GitHub Action:
 nohumanwrites.py     the public checker: check / setup, picks the best evidence available and says which
 nhw/common.py       one normalisation + repo helper shared by hook, verifier and checker (byte-stable hashes)
 SECURITY.md         the three sentences that govern every number this tool prints
-tests/test_ledger.py   17 end-to-end checks: sign, verify, hand edits, partial-line edits, duplicates, tampering, forgery, malformed records
+tests/test_ledger.py   19 end-to-end checks: sign, verify, hand edits, partial-line edits, duplicates, tampering, forgery, malformed records
 nhw/attest.py       layer 1: provenance from Claude Code transcripts (Write/Edit tool calls)
 nhw/gitmode.py      layer 1b: git blame + Co-Authored-By trailers
 nhw/stat.py         layer 3: inverted AI-tell scoring (sloptrim), labelled weak
 nhw/hook.py         production layer 1: Claude Code PostToolUse hook → signed .nhw/attest.jsonl (ssh-ed25519)
 nhw/verify.py       verifier: signature check + hunk match, per file or per git diff
 nhw/anchor.py       Level 2: sign the ledger head, record it in Sigstore Rekor, verify continuity + inclusion
+label/level3.md     Level 3 design note: three ways to take the key out of the writer's reach; local isolation ships (setup --level3)
 cli.py              CLI tying the layers together
 eval/separability.py   human-vs-machine ground-truth test on your own transcripts
 eval/*.json         results from the run reported in the paper

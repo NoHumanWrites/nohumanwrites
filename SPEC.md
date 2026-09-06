@@ -41,3 +41,13 @@ One JSON object per anchor, append-only, committed with the code. Written by `no
 ```
 
 Rules. (a) The head is uploaded to Rekor as a `rekord` entry with an `ssh`-format signature; Rekor stores the sha256 of the head and the signature, not the head bytes, so verifiers recompute the hash from the recorded head. (b) The namespace is `file` because Rekor's ssh verifier hardcodes it; per-hunk records keep `nhw`. (c) A verifier checks continuity (the first `ledger_bytes` bytes of today's ledger still hash to `ledger_sha256`), the signature against its OWN trust root, and, online, that Rekor serves the same hash, signature and index. Any failure drops the label to Level 1 and says why; records appended after the last anchor are reported as "not yet anchored". (d) Anchoring makes history tamper-evident. It does not make a false record true; the key-holder can still sign anything (paper §3, Levels).
+
+## Executor claim (Level 3, local) — `producer.executor`, format v0.1
+
+When the harness's sandbox denies the model's shell any read of the signing key (`setup --level3` writes the block into `<repo>/.claude/settings.json`: `sandbox.enabled`, `allowUnsandboxedCommands: false`, the key directory under `credentials.files` with `mode: deny`), the hook adds to each record's `producer`:
+
+```json
+"executor": {"kind": "harness-hook", "isolation": "sandbox-denies-key", "self_reported": true}
+```
+
+Rules. (a) The hook reads the repository's and the user's settings at write time, project keys winning, and writes the field only when all three conditions hold. (b) The field is a claim by the hook about its environment, not a signature by a second party; it is never used for the grade or the badge. `check` reports the count of records carrying it on a separate line marked self-reported. (c) A verifiable Level 3 (remote countersignature, trusted executor) will add a second `signer` and `sig` pair; see `label/level3.md`.

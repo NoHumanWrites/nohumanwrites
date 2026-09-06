@@ -27,6 +27,9 @@
                                                         (.nhw/anchors.jsonl; commit it). --label then verifies the anchor.
   python3 nohumanwrites.py setup --anchor               also install a git post-commit hook that anchors after each commit
   python3 nohumanwrites.py check <path> --label --offline   do not contact Rekor (anchor checked locally only)
+  python3 nohumanwrites.py setup --level3               Level 3 (local): sandbox block in <repo>/.claude/settings.json that
+                                                        denies the model's shell the signing key; the hook then records an
+                                                        `executor` claim per write (self-reported; label/level3.md)
 
 Works beyond code.  Each file is scored in the unit a reader edits: code by line; books, articles and
 essays by paragraph (a changed paragraph whose sentences mostly survive is reported as "edited"); lyrics
@@ -181,6 +184,7 @@ def check_ledger(repo, files, docs=(), explicit=None, trust_repo=False, force_pr
     state = "scored" if tot else ("unverifiable" if unverifiable_files else "no-evidence")
     return {"state": state, "evidence": "signed ledger (.nhw/attest.jsonl)", "trust_root": src, "keys": len(fps),
             "repo": repo, "_fps": fps,
+            "executor_records": sum(1 for r in records if isinstance(r.get("producer"), dict) and r["producer"].get("executor")),
             "records_valid": len(records), "records_malformed": malformed,
             "records_verified": verified_total, "records_unverified": unverified_total,
             "files_unverifiable": unverifiable_files, "lines": tot, "unattested": un, "files": per}
@@ -264,6 +268,9 @@ def render_label(res, pct, seal=None, offline=False):
     print(f"AI Grade {grade} · {band} · {res['lines'] - res['unattested']} of {res['lines']} units attested · checked {day} · {level}")
     if st.get("level") != 2 and st.get("why"):
         print(f"  Level 2 not earned: {st['why']}")
+    ex, tot_rec = res.get("executor_records", 0), res.get("records_valid", 0)
+    if ex:
+        print(f"  executor: {ex} of {tot_rec} ledger records signed under sandbox isolation (self-reported by the hook; Level 3 local, label/level3.md)")
     if st.get("level") == 2 and st.get("inclusion") is False:
         print("  WARNING: the recorded anchor and Rekor's entry disagree; treat the ledger history as unverified")
     lv = "L2" if st.get("level") == 2 else "L1"
@@ -626,7 +633,43 @@ def install_post_commit(repo):
     print(f"post-commit anchor installed in {path}"); return 0
 
 
+def install_level3(repo):
+    """Project settings that deny the model's shell the signing key (label/level3.md, design A)."""
+    from nhw import hook, anchor as anchor_mod
+    d = os.path.join(repo, ".claude"); os.makedirs(d, exist_ok=True)
+    path = os.path.join(d, "settings.json")
+    try:
+        s = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
+    except json.JSONDecodeError:
+        print(f"{path} is not valid JSON; fix it first"); return 1
+    key_dir = os.path.dirname(hook.KEY).replace(os.path.expanduser("~"), "~", 1)
+    sb = s.setdefault("sandbox", {})
+    sb["enabled"] = True; sb["allowUnsandboxedCommands"] = False; sb["failIfUnavailable"] = True
+    files = sb.setdefault("credentials", {}).setdefault("files", [])
+    if not any(e.get("path") == key_dir for e in files):
+        files.append({"path": key_dir, "mode": "deny"})
+    net = sb.setdefault("network", {}); dom = net.setdefault("allowedDomains", [])
+    host = anchor_mod.REKOR.split("//", 1)[-1].split("/", 1)[0]
+    if host not in dom:
+        dom.append(host)
+    exc = sb.setdefault("excludedCommands", [])
+    if "gh" not in exc:
+        exc.append("gh")            # Go-based CLIs fail TLS under Seatbelt; gh runs outside the sandbox
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(s, f, indent=2, ensure_ascii=False); f.write("\n")
+    print(f"Level 3 (local) settings written to {path}:")
+    print(f"  sandbox on, unsandboxed retry off, {key_dir} denied to sandboxed commands, {host} allowed, gh excluded")
+    print("  takes effect in the next Claude Code session in this repository; the hook then records an executor claim per write.")
+    print("  This is self-reported isolation, not a third-party proof: read label/level3.md before quoting it.")
+    return 0
+
+
 def cmd_setup(args=()):
+    if "--level3" in args:
+        repo = repo_root(os.getcwd())
+        if not repo:
+            print("--level3 needs to run inside a git repository"); return 2
+        return install_level3(repo)
     if "--anchor" in args:
         repo = repo_root(os.getcwd())
         if not repo:
