@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Pure AI — 100 percent machine-written, signed ledger, verifiable">
+  <title>Pure AI</title>
+  <desc>A seal for work the machine wrote in full: 100 percent of units attested by a signed ledger, nothing typed by hand after the machine finished. Spec: nohumanwrites.org/label</desc>
+  <defs>
+    <path id="ring" d="M120,120 m-92,0 a92,92 0 1,1 184,0 a92,92 0 1,1 -184,0"/>
+  </defs>
+  <circle cx="120" cy="120" r="116" fill="#16211F"/>
+  <circle cx="120" cy="120" r="108" fill="none" stroke="#5FD0C6" stroke-width="2"/>
+  <circle cx="120" cy="120" r="76" fill="#F5F7F6"/>
+  <text font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13" font-weight="600" letter-spacing="3" fill="#5FD0C6">
+    <textPath href="#ring" startOffset="2%">MACHINE-WRITTEN · SIGNED LEDGER · VERIFIABLE · 100 % ATTESTED ·</textPath>
+  </text>
+  <text x="120" y="108" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="20" font-weight="500" fill="#16211F">PURE</text>
+  <text x="120" y="146" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="40" font-weight="600" fill="#0E6F6A">AI</text>
+  <text x="120" y="170" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="9" letter-spacing="1.5" fill="#5C6B67">NOHUMANWRITES.ORG/LABEL</text>
+</svg>

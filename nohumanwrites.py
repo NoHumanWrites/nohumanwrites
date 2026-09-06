@@ -5,6 +5,8 @@
   python3 nohumanwrites.py check <path>...              score files or a directory
   python3 nohumanwrites.py check <path> --json          machine-readable
   python3 nohumanwrites.py check <path> --badge         one-line badge for a README (refused when there is no score)
+  python3 nohumanwrites.py check <path> --label         Guaranteed AI / Pure AI label (label/README.md); refused without a
+                                                        signed ledger under your own trust root, or below 90 % attested
   python3 nohumanwrites.py check <path> --transcripts   score against Claude Code logs even if a ledger exists
   python3 nohumanwrites.py check <path> --signers FILE  use this allowed-signers file
   python3 nohumanwrites.py check <path> --trust-repo-signers   accept the repository's own keys (prints a warning)
@@ -37,7 +39,7 @@ Three states: attested / unattested / unverifiable.  "Unattested" means typed by
 channel with no hook; this tool never says "human".  Standard library + OpenSSH.  Nothing leaves the machine.
 """
 from __future__ import annotations
-import json, os, subprocess, sys, tempfile
+import json, os, subprocess, sys, tempfile, time
 
 __version__ = "0.1.0-rc1"
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -205,7 +207,30 @@ def check_transcripts(files):
             "trust_root": "none (unsigned logs)", "lines": tot, "unattested": un, "files": per}
 
 
-def render(res, badge=False, as_json=False):
+def render_label(res, pct):
+    """The Guaranteed AI label (label/README.md): a grade only a signed ledger under the verifier's own trust root can earn."""
+    root = res.get("trust_root", "none")
+    if not res.get("evidence", "").startswith("signed ledger"):
+        why = "the evidence is unsigned transcripts, not a signed ledger"
+    elif root.startswith("none") or "REPOSITORY" in root.upper() or "repo" in root.lower():
+        why = f"the trust root is not yours ({root}); a label needs your own allowed_signers"
+    elif pct < 90:
+        why = f"{pct:.0f}% attested is below the 90% threshold"
+    else:
+        why = None
+    if why:
+        print(f"NoHumanWrites: no label — {why}. The report is still the useful part; run without --label."); return 5
+    grade = "Pure AI" if res["unattested"] == 0 else "Guaranteed AI"
+    day = time.strftime("%Y-%m-%d")
+    slug = grade.replace(" ", "_")
+    print(f"{grade} · {pct:.0f}% attested · checked {day} · Level 1 (self-signed) · {res['lines'] - res['unattested']} of {res['lines']} units")
+    print(f"![{grade}](https://img.shields.io/badge/{slug}-{pct:.0f}%25_attested_{day}-0E6F6A)")
+    print("Attested = came through a signed machine channel; the key proves the channel, not the author (label/README.md).")
+    print("Name the path the badge covers and publish the report (--json) next to it: https://nohumanwrites.org/label")
+    return 0
+
+
+def render(res, badge=False, as_json=False, label=False):
     if as_json:
         print(json.dumps(res, indent=1)); return 0
     if res is None or res["state"] == "no-evidence":
@@ -219,6 +244,8 @@ def render(res, badge=False, as_json=False):
               f"(trust root: {res['trust_root']}). No score. Use --signers FILE, or --trust-repo-signers if you accept the repo's own keys.")
         return 4
     pct = 100 * (res["lines"] - res["unattested"]) / res["lines"]
+    if label:
+        return render_label(res, pct)
     if badge:
         colour = "2ea44f" if pct >= 90 else "e0b23a" if pct >= 50 else "d23a2e"
         print(f"![NoHumanWrites](https://img.shields.io/badge/NoHumanWrites-{pct:.0f}%25_attested-{colour})"); return 0
@@ -486,7 +513,7 @@ def cmd_check(args):
                 cc = m["content_credentials"]
                 print(f"  {m['file']}: " + ("carries a C2PA Content Credentials manifest (verify with c2patool)" if cc else "no Content Credentials manifest found — no provenance"))
             return 0
-    return render(res, badge="--badge" in flags, as_json="--json" in flags)
+    return render(res, badge="--badge" in flags, as_json="--json" in flags, label="--label" in flags)
 
 
 def cmd_import(args):

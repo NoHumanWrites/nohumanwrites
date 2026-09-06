@@ -106,6 +106,13 @@ def main():
         r = run([sys.executable, CLI, "check", empty], env=dict(env, HOME=os.path.join(work, "nohome")))
         assert "no provenance" in r.stdout and "human" not in r.stdout.lower().replace("nohumanwrites", ""), r.stdout; checks += 1
 
+        # 12. the label: earned only by a signed ledger under our own keys, refused on unsigned evidence
+        clean = os.path.join(repo, "clean.py"); open(clean, "w").write(BODY); hook(env, clean, content=BODY)
+        r = run([sys.executable, CLI, "check", clean, "--label"], env=env)
+        assert r.returncode == 0 and "Pure AI" in r.stdout and "100% attested" in r.stdout, r.stdout + r.stderr; checks += 1
+        r = run([sys.executable, CLI, "check", forged, "--label", "--trust-repo-signers"], env=env_nokeys)
+        assert r.returncode == 5 and "no label" in r.stdout and "not yours" in r.stdout, r.stdout + r.stderr; checks += 1
+
         print(f"ok: {checks} checks passed")
         return 0
     finally:

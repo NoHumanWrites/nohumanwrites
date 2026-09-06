@@ -7,3 +7,11 @@ https://arxiv.org/abs/2510.13653 → https://web.archive.org/web/20260904212516/
 https://arxiv.org/abs/2506.12469 → (no redirect; check web.archive.org/web/*/https://arxiv.org/abs/2506.12469)
 https://www.youtube.com/watch?v=slePq-H-TMA → https://web.archive.org/web/20260904212633/https://www.youtube.com/watch?v=slePq-H-TMA
 https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content → https://web.archive.org/web/20260904212642/https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content
+https://notbyai.fyi/ → https://web.archive.org/web/20260906105344/https://notbyai.fyi/
+https://iptc.org/news/eu-ai-transparency-code-of-practice-june-2026/ → (no redirect; check web.archive.org/web/*/https://iptc.org/news/eu-ai-transparency-code-of-practice-june-2026/)
+https://www.semafor.com/article/04/24/2026/google-ceo-says-75-of-companys-new-code-is-ai-generated → https://web.archive.org/web/20260906105510/https://www.semafor.com/article/04/24/2026/google-ceo-says-75-of-companys-new-code-is-ai-generated
+https://www.techspot.com/news/112408-anthropic-more-than-90-code-now-written-ai.html → (no redirect; check web.archive.org/web/*/https://www.techspot.com/news/112408-anthropic-more-than-90-code-now-written-ai.html)
+https://techcrunch.com/2025/04/29/microsoft-ceo-says-up-to-30-of-the-companys-code-was-written-by-ai/ → (no redirect; check web.archive.org/web/*/https://techcrunch.com/2025/04/29/microsoft-ceo-says-up-to-30-of-the-companys-code-was-written-by-ai/)
+https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/ → https://web.archive.org/web/20260906105728/https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/#discussion
+https://www.anthropic.com/research/economic-index-june-2026-report → https://web.archive.org/web/20260906105748/https://www.anthropic.com/research/economic-index-june-2026-report
+https://en.wikipedia.org/wiki/No-AI_label → https://web.archive.org/web/20260906105806/https://en.wikipedia.org/wiki/No-AI_label
