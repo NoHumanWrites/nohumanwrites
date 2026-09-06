@@ -113,6 +113,36 @@ def main():
         r = run([sys.executable, CLI, "check", forged, "--label", "--trust-repo-signers"], env=env_nokeys)
         assert r.returncode == 5 and "no label" in r.stdout and "not yours" in r.stdout, r.stdout + r.stderr; checks += 1
 
+        # 13. Level 2: anchor against a fake Rekor (local HTTP server), verify inclusion, then break continuity
+        import base64, hashlib, http.server, threading
+        store = {}
+        class FakeRekor(http.server.BaseHTTPRequestHandler):
+            def log_message(self, *a): pass
+            def _send(self, code, obj):
+                b = json.dumps(obj).encode(); self.send_response(code); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+            def do_POST(self):
+                e = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                data = base64.b64decode(e["spec"]["data"]["content"])
+                body = {"apiVersion": "0.0.1", "kind": "rekord", "spec": {"data": {"hash": {"algorithm": "sha256", "value": hashlib.sha256(data).hexdigest()}},
+                        "signature": e["spec"]["signature"]}}
+                uuid = hashlib.sha256(data).hexdigest(); store[uuid] = {"logIndex": len(store) + 1, "integratedTime": 1, "logID": "fake",
+                                                                        "body": base64.b64encode(json.dumps(body).encode()).decode()}
+                self._send(201, {uuid: store[uuid]})
+            def do_GET(self):
+                uuid = self.path.rsplit("/", 1)[-1]
+                self._send(200, {uuid: store[uuid]}) if uuid in store else self._send(404, {"message": "no such entry"})
+        srv = http.server.HTTPServer(("127.0.0.1", 0), FakeRekor); threading.Thread(target=srv.serve_forever, daemon=True).start()
+        env_rekor = dict(env, NHW_REKOR=f"http://127.0.0.1:{srv.server_port}")
+        r = run([sys.executable, CLI, "anchor", "--repo", repo], env=env_rekor, cwd=repo)
+        assert r.returncode == 0 and "Rekor index 1" in r.stdout and os.path.exists(os.path.join(repo, ".nhw", "anchors.jsonl")), r.stdout + r.stderr; checks += 1
+        r = run([sys.executable, CLI, "check", clean, "--label"], env=env_rekor)
+        assert "Level 2 (anchored" in r.stdout and "inclusion verified" in r.stdout, r.stdout + r.stderr; checks += 1
+        b = bytearray(open(ledger, "rb").read()); i = b.find(b'"path"'); b[i + 1] = ord("P"); open(ledger, "wb").write(bytes(b))
+        r = run([sys.executable, CLI, "check", clean, "--label"], env=env_rekor)
+        assert "Level 1" in r.stdout and "prefix no longer matches" in r.stdout, r.stdout + r.stderr; checks += 1
+        srv.shutdown()
+
         print(f"ok: {checks} checks passed")
         return 0
     finally:

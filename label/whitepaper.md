@@ -1,6 +1,6 @@
 # AI Grade: a number for how much of a work came through a signed machine channel
 
-White paper v0.3 · 6 September 2026 · Plus de Fun Agency, Geneva
+White paper v0.3.1 · 6 September 2026 · Plus de Fun Agency, Geneva
 Companion to *NoHumanWrites* (doi:10.5281/zenodo.22362427) and to the label spec in `label/README.md`.
 Author's interest: the author wrote NoHumanWrites and maintains the label; the label exists to sell the ledger.
 v0.2 followed an eight-model hostile review (`eval/council-review-label-2026-09-06.md`). v0.3 renames the mark, defines the scale, and is written to be read by anyone, not only engineers. Changes are listed at the end.
@@ -46,7 +46,7 @@ The lines are chosen for reasons a reader can check. 100 is exact. 90 is Not By 
 
 ### Two levels
 
-Level 1, self-signed: the author's machine key signs each hunk through the hook, and the verifier uses their own trust root, never the repository's. Level 2, anchored: the head of the ledger is recorded at each commit in a public transparency log such as Sigstore's Rekor, so a deleted or rewritten record leaves a visible gap. Anchoring makes the history tamper-evident; it does not make a false record true, and a key-holder can still sign anything. Taking the key-holder out of the loop needs a third design, a trusted executor outside the writer's reach that produces or countersigns the hunks; the parent paper's §10.3 describes it and nobody ships it yet [8]. The seal names its level so a reader knows which assurance they are looking at.
+Level 1, self-signed: the author's machine key signs each hunk through the hook, and the verifier uses their own trust root, never the repository's. Level 2, anchored: the head of the ledger, its hash, length, record count and commit, is signed and recorded in Sigstore's public Rekor log, by hand or from a git post-commit hook, and the receipt is committed beside the ledger. A verifier checks that the anchored prefix of today's ledger still hashes to the anchored value, that the anchor carries a signature from a trusted key, and that Rekor still serves the same entry, so a deleted or rewritten record leaves a visible gap. Anchoring makes the history tamper-evident; it does not make a false record true, and a key-holder can still sign anything. Taking the key-holder out of the loop is Level 3, a trusted executor outside the writer's reach that produces or countersigns the hunks; the parent paper's §10.3 describes it and nobody ships it yet [8]. The seal names its level so a reader knows which assurance they are looking at.
 
 ### What it guarantees, and what it does not
 
@@ -107,8 +107,11 @@ Checked on 6 September 2026 against the repository's own signed ledger, verified
 $ python3 nohumanwrites.py check . --label
 NoHumanWrites: no label — AI Grade 13 is below 50: most of this work did not come through a signed machine channel.
 
+$ python3 nohumanwrites.py anchor
+anchored: 103 records, ledger sha256 40da063ca400024f…, commit 75e07ddf2d19 → Rekor index 2742870568 (https://rekor.sigstore.dev)
+
 $ python3 nohumanwrites.py check label/ --label --seal label/ai-grade.svg
-AI Grade 100 · Pure · 98 of 98 units attested · checked 2026-09-06 · Level 1 (self-signed)
+AI Grade 100 · Pure · 98 of 98 units attested · checked 2026-09-06 · Level 2 (anchored · Rekor #2742870568 · commit 75e07ddf · inclusion verified, 1 record(s) since, not yet anchored)
 seal written: label/ai-grade.svg (signed into the ledger)
 ```
 
@@ -116,13 +119,15 @@ Signing key fingerprint: `SHA256:6t3ttnXr9M4hfcT7NHQvAqzemNizJnzU/1z/e6TzsYg` (e
 
 ## 9. What comes next
 
-- Now. `--label` and `--seal` in the CLI, the scale of §3, self-signed Level 1. Free to display on anything that passes, with path and date on the face.
-- Next. Anchoring: the ledger head recorded in Sigstore's Rekor at each commit, and the commit hash on the seal. Level 2 follows.
+- Now. `--label` and `--seal` in the CLI, the scale of §3, Level 1 and Level 2 (`anchor`, with the Rekor index and commit on the badge line). Free to display on anything that passes, with path and date on the face.
+- Next. Level 3: hunks produced or countersigned by a trusted executor the writing model cannot reach.
 - The protocol of §5, written up as a pre-registered study design before any registry publishes a number.
 - A registry, if the protocol exists: opt-in, delayed by a quarter, per-channel aggregates only, no per-team figures, no content.
 - Text provenance beyond code. The ledger already scores paragraphs, verse lines and bars of music [8]; the format is offered to the C2PA working group as one answer to the text gap in §1.
 
 ## Changes
+
+v0.3.1 (6 September 2026, evening). Level 2 shipped: `anchor` signs the ledger head and records it in Sigstore's public Rekor log; the check verifies continuity, signature and inclusion and prints the Rekor index and commit on the badge line, or says why it fell back to Level 1. The trusted-executor design is now called Level 3. §3, §8 and §9 updated; the anchor record format is in the repository's SPEC.md. First anchor: Rekor index 2742870568, commit 75e07ddf.
 
 v0.3 (6 September 2026). The mark is renamed from Guaranteed AI to AI Grade, on the maintainer's decision after one reviewer's objection that the old name promised authorship the ledger cannot prove. The number is now the label, with a defined scale (Pure 100, High 90–99, Mixed 50–89, no label below 50) and stated reasons for each line; the seal is generated with the number on its face and signed into the ledger. The paper is shortened by about a third and rewritten for readers who are not engineers, with the vocabulary defined once in §2 and the gaming list cut to a line each. Sources re-checked on the day at the live URLs: Not By AI's 90 % rule and "not an AI detection tool" [1], Pichai's Q3 2024 sentence [10], Semafor's 75 % report [12], METR's doubling and 320-minute figures [14], Morris et al. [17] and Feng et al. [18].
 

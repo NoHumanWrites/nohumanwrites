@@ -27,7 +27,7 @@ An unattested line means *typed by hand, or written through a channel with no ho
 
 ## The label: AI Grade
 
-Every mark on the market says a human made the work, on the creator's word. This one gives a number, on a signature: the share of the work that came through a signed machine channel, like octane on a pump. `check <path> --label` prints the grade and its band (Pure 100, High 90–99, Mixed 50–89) with the check date, `--seal file.svg` writes the numbered seal, and both are refused when there is no signed ledger under your own keys or the grade is below 50. The spec, the seals and the terms are in [`label/`](label/README.md); the argument, with sources, is the white paper [`label/whitepaper.md`](label/whitepaper.md).
+Every mark on the market says a human made the work, on the creator's word. This one gives a number, on a signature: the share of the work that came through a signed machine channel, like octane on a pump. `check <path> --label` prints the grade and its band (Pure 100, High 90–99, Mixed 50–89) with the check date, `--seal file.svg` writes the numbered seal, and both are refused when there is no signed ledger under your own keys or the grade is below 50. `nohumanwrites.py anchor` records the ledger head in Sigstore's public Rekor log (Level 2, anchored); `--label` then verifies continuity, signature and inclusion and prints the Rekor index, or says why it fell back to Level 1. The spec, the seals and the terms are in [`label/`](label/README.md); the argument, with sources, is the white paper [`label/whitepaper.md`](label/whitepaper.md).
 
 ## Not only code: books, lyrics, poems, sheet music
 
@@ -71,12 +71,13 @@ Keep the number in a pull request with a two-line GitHub Action:
 nohumanwrites.py     the public checker: check / setup, picks the best evidence available and says which
 nhw/common.py       one normalisation + repo helper shared by hook, verifier and checker (byte-stable hashes)
 SECURITY.md         the three sentences that govern every number this tool prints
-tests/test_ledger.py   12 end-to-end checks: sign, verify, hand edits, partial-line edits, duplicates, tampering, forgery, malformed records
+tests/test_ledger.py   17 end-to-end checks: sign, verify, hand edits, partial-line edits, duplicates, tampering, forgery, malformed records
 nhw/attest.py       layer 1: provenance from Claude Code transcripts (Write/Edit tool calls)
 nhw/gitmode.py      layer 1b: git blame + Co-Authored-By trailers
 nhw/stat.py         layer 3: inverted AI-tell scoring (sloptrim), labelled weak
 nhw/hook.py         production layer 1: Claude Code PostToolUse hook → signed .nhw/attest.jsonl (ssh-ed25519)
 nhw/verify.py       verifier: signature check + hunk match, per file or per git diff
+nhw/anchor.py       Level 2: sign the ledger head, record it in Sigstore Rekor, verify continuity + inclusion
 cli.py              CLI tying the layers together
 eval/separability.py   human-vs-machine ground-truth test on your own transcripts
 eval/*.json         results from the run reported in the paper
@@ -96,7 +97,7 @@ python3 cli.py stat <path>...   # statistical triage (weak)
 python3 eval/separability.py    # reproduce the AUC / base-rate numbers on your data
 ```
 
-Standard library only. Nothing leaves the machine.
+Standard library only. Nothing leaves the machine, except when you run `anchor`, which sends the ledger's hash, its signature and your public key to Rekor.
 
 ## Results on the author's machine (2026-09-04)
 

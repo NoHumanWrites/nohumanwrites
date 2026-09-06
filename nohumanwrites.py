@@ -23,6 +23,10 @@
   python3 nohumanwrites.py import <file> --from claude.ai     sign a text you received from an AI elsewhere, as received
   python3 nohumanwrites.py import <file> --from chatgpt --clipboard   same, saving the clipboard into <file> first
   python3 nohumanwrites.py setup                        create the signing key + install the Claude Code hook
+  python3 nohumanwrites.py anchor [--quiet]             Level 2: sign the ledger head and record it in Sigstore Rekor
+                                                        (.nhw/anchors.jsonl; commit it). --label then verifies the anchor.
+  python3 nohumanwrites.py setup --anchor               also install a git post-commit hook that anchors after each commit
+  python3 nohumanwrites.py check <path> --label --offline   do not contact Rekor (anchor checked locally only)
 
 Works beyond code.  Each file is scored in the unit a reader edits: code by line; books, articles and
 essays by paragraph (a changed paragraph whose sentences mostly survive is reported as "edited"); lyrics
@@ -43,7 +47,7 @@ channel with no hook; this tool never says "human".  Standard library + OpenSSH.
 from __future__ import annotations
 import json, os, subprocess, sys, tempfile, time
 
-__version__ = "0.1.0-rc1"
+__version__ = "0.2.0"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from nhw import attest, verify  # noqa: E402
@@ -176,6 +180,7 @@ def check_ledger(repo, files, docs=(), explicit=None, trust_repo=False, force_pr
                     "units": len(labels), "unattested": u, "edited": e, "state": "scored"})
     state = "scored" if tot else ("unverifiable" if unverifiable_files else "no-evidence")
     return {"state": state, "evidence": "signed ledger (.nhw/attest.jsonl)", "trust_root": src, "keys": len(fps),
+            "repo": repo, "_fps": fps,
             "records_valid": len(records), "records_malformed": malformed,
             "records_verified": verified_total, "records_unverified": unverified_total,
             "files_unverifiable": unverifiable_files, "lines": tot, "unattested": un, "files": per}
@@ -221,7 +226,7 @@ def ai_grade(res):
 
 def seal_svg(grade, band, day, level="Level 1"):
     """The numbered seal: the grade is the label, like octane on a pump."""
-    ring = f"AI GRADE {grade} · {band.upper()} · SIGNED LEDGER · VERIFIABLE · {day} ·"
+    ring = f"AI GRADE {grade} · {band.upper()} · {'ANCHORED LEDGER' if 'anchored' in level else 'SIGNED LEDGER'} · VERIFIABLE · {day} ·"
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="AI Grade {grade}, {band}: {grade} percent of units came through a signed machine channel, checked {day}">
   <title>AI Grade {grade}</title>
   <desc>{grade} percent of scored units came through a signed machine channel that still verifies ({band} band, {level}, checked {day}). The key proves the channel, not the author. Spec: nohumanwrites.org/label</desc>
@@ -238,7 +243,7 @@ def seal_svg(grade, band, day, level="Level 1"):
 """
 
 
-def render_label(res, pct, seal=None):
+def render_label(res, pct, seal=None, offline=False):
     """The AI Grade label (label/README.md): a number only a signed ledger under the verifier's own trust root can earn."""
     root = res.get("trust_root", "none")
     grade, band = ai_grade(res)
@@ -253,12 +258,20 @@ def render_label(res, pct, seal=None):
     if why:
         print(f"NoHumanWrites: no label — {why}. The report is still the useful part; run without --label."); return 5
     day = time.strftime("%Y-%m-%d")
-    print(f"AI Grade {grade} · {band} · {res['lines'] - res['unattested']} of {res['lines']} units attested · checked {day} · Level 1 (self-signed)")
-    print(f"![AI Grade {grade}](https://img.shields.io/badge/AI_Grade-{grade}_{band}_{day}-0E6F6A)")
+    from nhw import anchor as anchor_mod
+    st = anchor_mod.status(res["repo"], res.get("_fps", {}), online=not offline) if res.get("repo") else {"level": 1, "why": "no repository"}
+    level = anchor_mod.level_line(st)
+    print(f"AI Grade {grade} · {band} · {res['lines'] - res['unattested']} of {res['lines']} units attested · checked {day} · {level}")
+    if st.get("level") != 2 and st.get("why"):
+        print(f"  Level 2 not earned: {st['why']}")
+    if st.get("level") == 2 and st.get("inclusion") is False:
+        print("  WARNING: the recorded anchor and Rekor's entry disagree; treat the ledger history as unverified")
+    lv = "L2" if st.get("level") == 2 else "L1"
+    print(f"![AI Grade {grade}](https://img.shields.io/badge/AI_Grade-{grade}_{band}_{lv}_{day}-0E6F6A)")
     print("The grade is the share of units that came through a signed machine channel, rounded down; the key proves the channel, not the author (label/README.md).")
     print("Name the path the grade covers and publish the report (--json) next to it: https://nohumanwrites.org/label")
     if seal:
-        svg = seal_svg(grade, band, day)
+        svg = seal_svg(grade, band, day, level="Level 2 · anchored" if st.get("level") == 2 else "Level 1")
         open(seal, "w").write(svg)
         # the seal is a machine write too: record it in the ledger so it does not drag down the grade it carries
         from nhw import hook
@@ -267,9 +280,9 @@ def render_label(res, pct, seal=None):
     return 0
 
 
-def render(res, badge=False, as_json=False, label=False, seal=None):
+def render(res, badge=False, as_json=False, label=False, seal=None, offline=False):
     if as_json:
-        print(json.dumps(res, indent=1)); return 0
+        print(json.dumps({k: v for k, v in (res or {}).items() if not k.startswith("_")}, indent=1)); return 0
     if res is None or res["state"] == "no-evidence":
         print("NoHumanWrites: no provenance available here.")
         print("  No signed ledger for these files and no agent transcripts on this machine.")
@@ -282,7 +295,7 @@ def render(res, badge=False, as_json=False, label=False, seal=None):
         return 4
     pct = 100 * (res["lines"] - res["unattested"]) / res["lines"]
     if label:
-        return render_label(res, pct, seal=seal)
+        return render_label(res, pct, seal=seal, offline=offline)
     if badge:
         colour = "2ea44f" if pct >= 90 else "e0b23a" if pct >= 50 else "d23a2e"
         print(f"![NoHumanWrites](https://img.shields.io/badge/NoHumanWrites-{pct:.0f}%25_attested-{colour})"); return 0
@@ -551,7 +564,7 @@ def cmd_check(args):
                 print(f"  {m['file']}: " + ("carries a C2PA Content Credentials manifest (verify with c2patool)" if cc else "no Content Credentials manifest found — no provenance"))
             return 0
     return render(res, badge="--badge" in flags, as_json="--json" in flags, label="--label" in flags,
-                  seal=_opt(args, "--seal"))
+                  seal=_opt(args, "--seal"), offline="--offline" in flags)
 
 
 def cmd_import(args):
@@ -587,7 +600,38 @@ def cmd_import(args):
     return 0 if total else 1
 
 
-def cmd_setup():
+def cmd_anchor(args):
+    from nhw import anchor as anchor_mod, hook
+    repo = repo_root(_opt(args, "--repo") or os.getcwd())
+    if not repo:
+        print("not inside a git repository"); return 2
+    if not os.path.exists(hook.KEY):
+        print("no signing key; run: python3 nohumanwrites.py setup"); return 2
+    return anchor_mod.anchor(repo, hook.KEY, hook.fingerprint(), quiet="--quiet" in args)
+
+
+def install_post_commit(repo):
+    """A git post-commit hook that anchors the ledger after every commit (best effort, never blocks the commit)."""
+    hooks = os.path.join(repo, ".git", "hooks"); os.makedirs(hooks, exist_ok=True)
+    path = os.path.join(hooks, "post-commit")
+    line = f'python3 "{os.path.join(HERE, "nohumanwrites.py")}" anchor --quiet --repo "$(git rev-parse --show-toplevel)" || true\n'
+    existing = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
+    if "nohumanwrites.py" in existing:
+        print(f"post-commit anchor already installed in {path}"); return 0
+    with open(path, "a", encoding="utf-8") as f:
+        if not existing:
+            f.write("#!/bin/sh\n")
+        f.write("# NoHumanWrites Level 2: anchor the ledger head in Sigstore Rekor after each commit\n" + line)
+    os.chmod(path, 0o755)
+    print(f"post-commit anchor installed in {path}"); return 0
+
+
+def cmd_setup(args=()):
+    if "--anchor" in args:
+        repo = repo_root(os.getcwd())
+        if not repo:
+            print("--anchor needs to run inside a git repository"); return 2
+        return install_post_commit(repo)
     r = subprocess.run(["bash", os.path.join(HERE, "setup-key.sh")])
     if r.returncode:
         return r.returncode
@@ -624,7 +668,9 @@ def main(argv):
     if argv[0] == "import":
         return cmd_import(argv[1:])
     if argv[0] == "setup":
-        return cmd_setup()
+        return cmd_setup(argv[1:])
+    if argv[0] == "anchor":
+        return cmd_anchor(argv[1:])
     print(__doc__); return 2
 
 

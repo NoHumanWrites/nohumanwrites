@@ -26,3 +26,18 @@ Rules.
 6. A record never carries a human identity beyond the machine key. Reviewers see "unattested", not a name.
 
 Harness adapters emit one record per write. For Claude Code that is a `PostToolUse` hook matching `Write|Edit`; the tool input already contains the exact text.
+
+## Anchors (Level 2) — `.nhw/anchors.jsonl`, format v0.1
+
+One JSON object per anchor, append-only, committed with the code. Written by `nohumanwrites.py anchor` (by hand, or from the git post-commit hook that `setup --anchor` installs).
+
+```json
+{"head":{"v":1,"kind":"nhw-anchor","ts":"2026-09-06T19:55:17Z",
+         "ledger_sha256":"<sha256 of .nhw/attest.jsonl as it stood>","ledger_bytes":179973,"records":103,
+         "commit":"<git HEAD at anchor time, or null>","signer":"ssh-ed25519:SHA256:<fingerprint>"},
+ "sig":"<base64 of the ASCII-armoured `ssh-keygen -Y sign -n file` signature over the canonical JSON of head>",
+ "rekor":{"server":"https://rekor.sigstore.dev","uuid":"<entry uuid>","logIndex":2742870568,
+          "integratedTime":1788724517,"logID":"<log id>"}}
+```
+
+Rules. (a) The head is uploaded to Rekor as a `rekord` entry with an `ssh`-format signature; Rekor stores the sha256 of the head and the signature, not the head bytes, so verifiers recompute the hash from the recorded head. (b) The namespace is `file` because Rekor's ssh verifier hardcodes it; per-hunk records keep `nhw`. (c) A verifier checks continuity (the first `ledger_bytes` bytes of today's ledger still hash to `ledger_sha256`), the signature against its OWN trust root, and, online, that Rekor serves the same hash, signature and index. Any failure drops the label to Level 1 and says why; records appended after the last anchor are reported as "not yet anchored". (d) Anchoring makes history tamper-evident. It does not make a false record true; the key-holder can still sign anything (paper §3, Levels).

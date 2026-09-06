@@ -76,7 +76,7 @@ table.scale td.b{font-weight:600;white-space:nowrap}
   <p>It does not guarantee quality, correctness or safety. It does not guarantee authorship: "write exactly these lines", or an agent copying a hand-written file back into place, yields an attested hunk. It does not claim the absence of human judgement, which sits in the prompt and the review and is not made of bytes. And it is not anonymity: the ledger records a key fingerprint, never a name, but on a small team a key identifies a person by elimination, so reports aggregate per repository. A seal names the path it covers; one that does not is invalid.</p>
 
   <h2>Two levels</h2>
-  <p><strong>Level 1, self-signed</strong> (shipped): the author's machine key signs each hunk through the harness hook; the verifier uses their own trust root, never the repository's. <strong>Level 2, anchored</strong> (designed, not built): the ledger head recorded in a public transparency log at each commit, so a deleted record leaves a visible gap. Anchoring makes the history tamper-evident; it does not make a false record true, and a key-holder can still sign anything. Taking the key-holder out of the loop needs a trusted executor outside the writer's reach, a third design the paper's §10.3 describes and nobody ships yet.</p>
+  <p><strong>Level 1, self-signed</strong> (shipped): the author's machine key signs each hunk through the harness hook; the verifier uses their own trust root, never the repository's. <strong>Level 2, anchored</strong> (shipped 6 September 2026): <code>nohumanwrites.py anchor</code> signs the ledger head and records it in Sigstore's public Rekor log, by hand or from a git post-commit hook; the check then verifies that the anchored part of the ledger is unchanged, that the anchor is signed by a trusted key, and that Rekor still serves the same entry. A deleted or rewritten record leaves a visible gap. Anchoring makes the history tamper-evident; it does not make a false record true, and a key-holder can still sign anything. Taking the key-holder out of the loop is Level 3, a trusted executor outside the writer's reach, which the paper's §10.3 describes and nobody ships yet.</p>
 
   <h2>Earn it</h2>
 <pre>python3 nohumanwrites.py setup                              # once: hook + dedicated key
@@ -84,7 +84,7 @@ table.scale td.b{font-weight:600;white-space:nowrap}
 python3 nohumanwrites.py check &lt;path&gt; --label               # grade, band, dated badge, wording
 python3 nohumanwrites.py check &lt;path&gt; --label --seal g.svg  # plus the numbered seal
 
-AI Grade 100 · Pure · 98 of 98 units attested · checked 2026-09-06 · Level 1 (self-signed)
+AI Grade 100 · Pure · 98 of 98 units attested · checked 2026-09-06 · Level 2 (anchored · Rekor #2742870568 · commit 75e07ddf · inclusion verified)
 seal written: label/ai-grade.svg (signed into the ledger)</pre>
   <p>Refused, with the reason printed, when there is no signed ledger, when the evidence is unsigned transcripts, when the trust root is the repository's own keys, and below grade 50. A label with no ledger behind it is the kind of mark this one exists to replace.</p>
 
