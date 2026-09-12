@@ -88,7 +88,7 @@ What the grade contributes to the larger question of machine autonomy is small a
 ## 7. How the grade can be gamed
 
 - Prompt-supplied content. "Write exactly these lines" yields an attested hunk. Not defended; disclosed on the seal and in §3.
-- Rewrite laundering. An agent reads a hand-written file and writes it back, grade 100. Same as above; the ledger's `producer` field and the prompt log, where a team keeps one, are the only trace.
+- Rewrite laundering. An agent reads a hand-written file and writes it back, grade 100. Through any ordinary agent write the `producer` field and the prompt log, where a team keeps one, are the only trace. Through `machinize` (v0.3.3) the trace is on the signed record itself: source hash, declared origin, verbatim carry-over, the summary of the claim, source and logic checks that ran before the rewrite, and the word *derived* on the label line and the badge. The undisclosed path is still open; the disclosed one now exists.
 - Non-AI automation through the hook. A formatter or a `sed` run routed through the agent's write tool is attested, because it is a machine channel. The grade says "machine channel", not "model output".
 - Scope cherry-picking. A seal on the one clean subdirectory. Every seal names its path; one that does not is invalid.
 - Threshold gaming. Re-emitting a grade-89 file through the agent to reach 91. Rewrite laundering with a target; same trace, same disclosure.
@@ -126,6 +126,8 @@ Signing key fingerprint: `SHA256:6t3ttnXr9M4hfcT7NHQvAqzemNizJnzU/1z/e6TzsYg` (e
 - Text provenance beyond code. The ledger already scores paragraphs, verse lines and bars of music [8]; the format is offered to the C2PA working group as one answer to the text gap in §1.
 
 ## Changes
+
+v0.3.3 (12 September 2026). The gaming list's "rewrite laundering" line gains its disclosed counterpart: `machinize`, the mirror of a humaniser, reads a declared human work, checks its cited sources and its logic, rewrites it through a machine channel and signs the derivation (source hash, declared origin, verbatim carry-over) and the verification summary into the record, with a signed report beside the text; the label and the badge then read *derived*. Nothing in the grade's definition changes. Paper §11 has the demo on a public-domain human text and the argument.
 
 v0.3.2 (6 September 2026, night). Level 3 started: design note `label/level3.md` with three designs (local isolation through the harness sandbox, remote countersigning, trusted executor) and the holes in each. The local design ships as `setup --level3` plus an `executor` claim the hook writes into each record when the sandbox denies it the key; the check prints it as a separate self-reported line and the badge is unchanged. §3 and §9 updated.
 

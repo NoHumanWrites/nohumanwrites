@@ -1,0 +1,21 @@
+machinize: darwin-origin-ch3.md → darwin-origin-ch3-machinized.md via ollama (huihui_ai/qwen2.5-abliterate:14b), prose
+  1/4 claims and cited sources …
+  2/4 sources: 5 cited, checking online …
+      matched   Charles Darwin, On the Origin of Species  → https://doi.org/10.5962/bhl.title.959
+      ambiguous De Candolle  → https://en.wikipedia.org/wiki/Augustin_Pyramus_de_Candolle
+      ambiguous Lyell  → https://en.wikipedia.org/wiki/Lyell
+      matched   W. Herbert, Dean of Manchester  → https://doi.org/10.1093/ww/9780199540884.013.u49844
+      ambiguous Linnæus  → https://en.wikipedia.org/wiki/Carl_Linnaeus
+  3/4 logic review …
+  4/4 rewrite: 5 passage(s) …
+      passage 1/5: 349 words
+      passage 2/5: 515 words
+      passage 3/5: 432 words
+      passage 4/5: 470 words
+      passage 5/5: 120 words
+  written: eval/machinize/darwin-origin-ch3-machinized.md (1900 words in, 1727 out); report: eval/machinize/darwin-origin-ch3-machinized-report.md
+  carry-over: 0 of 62 source sentences verbatim (0%), 1 of 11 paragraphs
+  verified: 10 claims read; 5 sources cited, 2 matched, 3 ambiguous, 0 not found, 0 unchecked; 0 issue(s) (0 high): 0 corrected in the text, 0 left for a person (see the report)
+  style tells (weak, for the record only): source 0 → out 15
+  signed: 2 record(s) (producer.kind=machinized, derived_from + verification on the record); run: python3 nohumanwrites.py check eval/machinize/darwin-origin-ch3-machinized.md --label
+exit 0

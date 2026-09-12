@@ -56,6 +56,18 @@ python3 nohumanwrites.py check https://www.linkedin.com/posts/...  --repo ~/post
 
 LinkedIn shows a login wall to anonymous readers, so for LinkedIn save the post page from your browser and run `check saved-post.html --repo ~/posts`; Medium, Substack and ordinary blogs work from the URL. A podcast RSS feed gets a per-episode card (disclosure wording, C2PA in the first 2 MB of audio, transcript link) and, when a transcript exists, the transcript matched against the script you signed before recording. A Spotify track gets a card of declared credits versus the empty verifiable column that a stream necessarily has.
 
+### The mirror of a humaniser: `machinize`, an AI Made version
+
+A humaniser takes machine text and rewrites it until a style detector says "human". It erases the record. `machinize` runs the other way and keeps it. Give it a work a person wrote (a paper, a chapter, a song, a poem, a transcript) and it produces a version made by the machine end to end: it lists the work's claims and the sources it cites, looks each source up (Crossref, Open Library, Wikipedia) and records what answered, reviews the logic as a referee would, then rewrites the whole work in its own words with the corrections applied. Text and verification report are signed into the ledger, and the signed record carries the derivation (the source's hash, what you declared the source to be, how many of its sentences survived verbatim) and the verification summary. The source stays unattested, exactly as you wrote it. Local Ollama by default, so the text never leaves the machine; `--engine claude` or `--engine command:<cmd>` otherwise; `--profile verse` for songs and poems, line by line and stanza by stanza.
+
+```bash
+python3 nohumanwrites.py machinize paper.md                     # → paper-machinized.md + paper-machinized-report.md, both signed
+python3 nohumanwrites.py check paper-machinized.md --label      # AI Grade 100 · Pure · … · DERIVED (machine rewrite of a declared human source)
+python3 nohumanwrites.py machinize song.txt --profile verse --no-verify   # rewrite only, no look-ups
+```
+
+The grade counts the channel, as always. What changes is that the report and the badge say *derived*, with the carry-over and the verification next to it, so a rewrite cannot pass for original machine work, and a reader can see which sources answered and which did not. Paper §11 and the white paper's gaming list explain why this is the one rewrite mode the tool ships: it adds a mark instead of removing one.
+
 What this cannot do, on purpose: look at a poem nobody signed and tell you whether a person wrote it. Nothing can (paper §6). It tells you what changed after the machine's version was signed, which is the question a publisher, a co-writer or a rights holder can act on.
 
 Keep the number in a pull request with a two-line GitHub Action:
@@ -72,6 +84,7 @@ nohumanwrites.py     the public checker: check / setup, picks the best evidence 
 nhw/common.py       one normalisation + repo helper shared by hook, verifier and checker (byte-stable hashes)
 SECURITY.md         the three sentences that govern every number this tool prints
 tests/test_ledger.py   19 end-to-end checks: sign, verify, hand edits, partial-line edits, duplicates, tampering, forgery, malformed records
+nhw/machinize.py    the mirror of a humaniser: human draft → signed machine rewrite with the derivation on the record (tests/test_machinize.py)
 nhw/attest.py       layer 1: provenance from Claude Code transcripts (Write/Edit tool calls)
 nhw/gitmode.py      layer 1b: git blame + Co-Authored-By trailers
 nhw/stat.py         layer 3: inverted AI-tell scoring (sloptrim), labelled weak
@@ -109,7 +122,7 @@ Standard library only. Nothing leaves the machine, except when you run `anchor`,
 
 ## What this is not
 
-No AI-text detector for grading people. No humaniser. No watermark removal. See paper §7.
+No AI-text detector for grading people. No humaniser. No watermark removal. The one rewrite mode it ships, `machinize`, runs the other way and records what it did. See paper §7 and §11.
 
 Publisher: Plus de Fun Agency (a line of PLUS DE FUN Sàrl, Geneva). Licence: Apache-2.0 (proposed).
 

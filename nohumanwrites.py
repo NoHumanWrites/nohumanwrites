@@ -22,6 +22,16 @@
   python3 nohumanwrites.py check saved.html --repo DIR  same as the web card, for a page saved from the browser (LinkedIn)
   python3 nohumanwrites.py import <file> --from claude.ai     sign a text you received from an AI elsewhere, as received
   python3 nohumanwrites.py import <file> --from chatgpt --clipboard   same, saving the clipboard into <file> first
+  python3 nohumanwrites.py machinize <human.md> [--out ai.md] [--engine ollama|claude|command:<cmd>] [--model NAME]
+                                                        the mirror of a humaniser, producing an "AI Made" version of a work a
+                                                        person wrote: the machine lists the claims and cited sources, looks the
+                                                        sources up (Crossref, Open Library, Wikipedia), reviews the logic,
+                                                        rewrites the whole work with the corrections applied, signs text and
+                                                        report into the ledger with the derivation (source hash, declared
+                                                        origin, verbatim carry-over) and the verification summary on the
+                                                        record, so `check` shows "derived" instead of hiding it. Local Ollama
+                                                        by default. --no-verify = rewrite only; --offline = no look-ups;
+                                                        --profile verse for songs and poems (line by line, stanza by stanza).
   python3 nohumanwrites.py setup                        create the signing key + install the Claude Code hook
   python3 nohumanwrites.py anchor [--quiet]             Level 2: sign the ledger head and record it in Sigstore Rekor
                                                         (.nhw/anchors.jsonl; commit it). --label then verifies the anchor.
@@ -48,13 +58,13 @@ Three states: attested / unattested / unverifiable.  "Unattested" means typed by
 channel with no hook; this tool never says "human".  Standard library + OpenSSH.  Nothing leaves the machine.
 """
 from __future__ import annotations
-import json, os, subprocess, sys, tempfile, time
+import json, os, re, subprocess, sys, tempfile, time
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from nhw import attest, verify  # noqa: E402
-from nhw.common import MIN_LEN, norm_text, read_text, repo_root, profile_for, decode_text  # noqa: E402
+from nhw.common import hunk_sha, MIN_LEN, norm_text, read_text, repo_root, profile_for, decode_text  # noqa: E402
 
 SKIP_DIRS = {"node_modules", "__pycache__", "dist", "build", ".git", ".nhw"}
 EXPORT_EXT = {".docx", ".epub", ".odt"}                       # zipped-XML documents: paragraphs are extracted
@@ -182,7 +192,26 @@ def check_ledger(repo, files, docs=(), explicit=None, trust_repo=False, force_pr
         per.append({"file": d, "profile": "document (exported; matched against the whole ledger)", "unit": "paragraph",
                     "units": len(labels), "unattested": u, "edited": e, "state": "scored"})
     state = "scored" if tot else ("unverifiable" if unverifiable_files else "no-evidence")
-    return {"state": state, "evidence": "signed ledger (.nhw/attest.jsonl)", "trust_root": src, "keys": len(fps),
+    scored_paths = {f["file"] for f in per if f.get("state") == "scored"}
+    current = {os.path.relpath(os.path.realpath(f), repo): hunk_sha(read_text(f) or "") for f in files}
+    latest = {}
+    for r in records:
+        pr = r.get("producer") if isinstance(r.get("producer"), dict) else {}
+        d = pr.get("derived_from") if pr else None
+        if not (isinstance(d, dict) and r.get("path") in scored_paths):
+            continue
+        live = (r.get("hunk") or {}).get("sha256") == current.get(r["path"])
+        key = r["path"]
+        if key not in latest or (live, r.get("ts", "")) > latest[key][0]:
+            latest[key] = ((live, r.get("ts", "")), r, pr, d)
+    derived = []
+    for _, r, pr, d in latest.values():
+        co = d.get("carry_over", {}) if isinstance(d.get("carry_over"), dict) else {}
+        derived.append({"file": r["path"], "declared": d.get("declared"), "source": d.get("path"),
+                        "source_sha256": d.get("sha256"), "engine": pr.get("harness"), "model": pr.get("model"),
+                        "sentences": co.get("sentences"), "sentences_verbatim": co.get("sentences_verbatim"),
+                        "verification": pr.get("verification") if isinstance(pr.get("verification"), dict) else None})
+    return {"state": state, "derived": derived, "evidence": "signed ledger (.nhw/attest.jsonl)", "trust_root": src, "keys": len(fps),
             "repo": repo, "_fps": fps,
             "executor_records": sum(1 for r in records if isinstance(r.get("producer"), dict) and r["producer"].get("executor")),
             "records_valid": len(records), "records_malformed": malformed,
@@ -265,7 +294,13 @@ def render_label(res, pct, seal=None, offline=False):
     from nhw import anchor as anchor_mod
     st = anchor_mod.status(res["repo"], res.get("_fps", {}), online=not offline) if res.get("repo") else {"level": 1, "why": "no repository"}
     level = anchor_mod.level_line(st)
-    print(f"AI Grade {grade} · {band} · {res['lines'] - res['unattested']} of {res['lines']} units attested · checked {day} · {level}")
+    derived = res.get("derived", [])
+    tag = " · DERIVED (machine rewrite of a declared %s source)" % (derived[0].get("declared") or "?") if derived else ""
+    print(f"AI Grade {grade} · {band} · {res['lines'] - res['unattested']} of {res['lines']} units attested · checked {day} · {level}{tag}")
+    for d in derived:
+        n, k = d.get("sentences") or 0, d.get("sentences_verbatim") or 0
+        print(f"  derived: {d['file']} from {d.get('source')} (sha256 {str(d.get('source_sha256', ''))[:12]}…); "
+              + (f"{100 * k // n}% of the source's sentences survived verbatim" if n else "carry-over unknown"))
     if st.get("level") != 2 and st.get("why"):
         print(f"  Level 2 not earned: {st['why']}")
     ex, tot_rec = res.get("executor_records", 0), res.get("records_valid", 0)
@@ -273,7 +308,7 @@ def render_label(res, pct, seal=None, offline=False):
         print(f"  executor: {ex} of {tot_rec} ledger records signed under sandbox isolation (self-reported by the hook; Level 3 local, label/level3.md)")
     if st.get("level") == 2 and st.get("inclusion") is False:
         print("  WARNING: the recorded anchor and Rekor's entry disagree; treat the ledger history as unverified")
-    lv = "L2" if st.get("level") == 2 else "L1"
+    lv = ("L2" if st.get("level") == 2 else "L1") + ("_derived" if derived else "")
     print(f"![AI Grade {grade}](https://img.shields.io/badge/AI_Grade-{grade}_{band}_{lv}_{day}-0E6F6A)")
     print("The grade is the share of units that came through a signed machine channel, rounded down; the key proves the channel, not the author (label/README.md).")
     print("Name the path the grade covers and publish the report (--json) next to it: https://nohumanwrites.org/label")
@@ -322,6 +357,17 @@ def render(res, badge=False, as_json=False, label=False, seal=None, offline=Fals
             where = ", ".join(str(x) for x in u[:8]) + ("…" if len(u) > 8 else "")
             extra = f"; {len(e)} edited {unit}(s): {', '.join(str(x) for x in e[:4])}{'…' if len(e) > 4 else ''}" if e else ""
             print(f"  {f['file']} [{f.get('profile', 'code')}]: {n_un(f)} unattested {unit}(s)" + (f" → {where}" if where else "") + extra)
+    for d in res.get("derived", []):
+        n, k = d.get("sentences") or 0, d.get("sentences_verbatim") or 0
+        co = f"{100 * k // n}% of the source's sentences survived verbatim" if n else "carry-over unknown"
+        print(f"  {d['file']}: DERIVED — a machine rewrite of a declared {d.get('declared', '?')} source ({d.get('source')}, "
+              f"sha256 {str(d.get('source_sha256', ''))[:12]}…) via {d.get('engine')}{' ' + d['model'] if d.get('model') else ''}; {co}. "
+              "The grade counts the channel; the derivation is on the record.")
+        v = d.get("verification")
+        if v:
+            print(f"    verified before the rewrite: {v.get('claims', 0)} claims, {v.get('sources_cited', 0)} sources cited "
+                  f"({v.get('sources_matched', 0)} matched, {v.get('sources_ambiguous', 0)} ambiguous, {v.get('sources_not_found', 0)} not found), "
+                  f"{v.get('issues', 0)} issue(s): {v.get('corrections_applied', 0)} corrected in the text, {v.get('needs_evidence', 0)} left for a person; report signed alongside")
     if res["unattested"] == 0:
         print("  every considered unit carries machine provenance.")
     else:
@@ -607,6 +653,46 @@ def cmd_import(args):
     return 0 if total else 1
 
 
+def cmd_machinize(args):
+    """The mirror of a humaniser (nhw/machinize.py): a human work in, a signed AI Made version out, derivation on the record."""
+    from nhw import machinize as mz
+    opts = {"--out", "--engine", "--model", "--declared", "--profile"}
+    paths = [a for i, a in enumerate(args) if not a.startswith("--") and not (i > 0 and args[i - 1] in opts)]
+    if len(paths) != 1:
+        print("usage: nohumanwrites.py machinize <human-work> [--out FILE] [--engine ollama|claude|command:<cmd>] [--model NAME]\n"
+              "         [--declared human] [--profile prose|verse] [--no-verify] [--offline] [--no-sign] [--json]"); return 2
+    src = paths[0]
+    out = _opt(args, "--out") or re.sub(r"(\.[^.]+)?$", r"-machinized\1", src, count=1)
+    if os.path.realpath(out) == os.path.realpath(src):
+        print("--out must differ from the source: the source stays as the person wrote it"); return 2
+    try:
+        summary = mz.machinize(src, out, engine=_opt(args, "--engine") or "ollama", model=_opt(args, "--model"),
+                               declared=_opt(args, "--declared") or "human", verify="--no-verify" not in args,
+                               offline="--offline" in args, sign="--no-sign" not in args, profile=_opt(args, "--profile"),
+                               log=(lambda *a, **k: None) if "--json" in args else print)
+    except (RuntimeError, ValueError, OSError) as e:
+        print(f"machinize failed: {e}"); return 1
+    if "--json" in args:
+        print(json.dumps(summary, indent=1)); return 0
+    co = summary["derived_from"]["carry_over"]
+    pct = 100 * co["sentences_verbatim"] // co["sentences"] if co["sentences"] else 0
+    print(f"  written: {out} ({summary['words_in']} words in, {summary['words_out']} out); report: {summary['report']}")
+    print(f"  carry-over: {co['sentences_verbatim']} of {co['sentences']} source sentences verbatim ({pct}%), "
+          f"{co['units_verbatim']} of {co['units']} {co['unit']}s")
+    v = summary.get("verification")
+    if v:
+        print(f"  verified: {v['claims']} claims read; {v['sources_cited']} sources cited, {v['sources_matched']} matched, "
+              f"{v['sources_ambiguous']} ambiguous, {v['sources_not_found']} not found, {v['sources_unchecked']} unchecked; {v['issues']} issue(s) "
+              f"({v['issues_high']} high): {v['corrections_applied']} corrected in the text, {v['needs_evidence']} left for a person (see the report)")
+    sc = summary["style_score_weak"]
+    if sc.get("source") is not None and sc.get("out") is not None:
+        print(f"  style tells (weak, for the record only): source {sc['source']} → out {sc['out']}")
+    if summary["records"]:
+        print(f"  signed: {summary['records']} record(s) (producer.kind=machinized, derived_from + verification on the record); "
+              f"run: python3 nohumanwrites.py check {out} --label")
+    return 0
+
+
 def cmd_anchor(args):
     from nhw import anchor as anchor_mod, hook
     repo = repo_root(_opt(args, "--repo") or os.getcwd())
@@ -714,6 +800,8 @@ def main(argv):
         return cmd_setup(argv[1:])
     if argv[0] == "anchor":
         return cmd_anchor(argv[1:])
+    if argv[0] in ("machinize", "aimade"):
+        return cmd_machinize(argv[1:])
     print(__doc__); return 2
 
 

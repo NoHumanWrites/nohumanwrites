@@ -1,0 +1,32 @@
+machinize: darwin-origin-ch3.md → darwin-origin-ch3-machinized-claude.md via claude, prose
+  1/4 claims and cited sources …
+  2/4 sources: 11 cited, checking online …
+      not found Charles Darwin, On the Origin of Species, chapter III (sixth edition, 
+      not found Augustin Pyramus de Candolle (the elder De Candolle), on organic being
+      not found Charles Lyell, on organic beings exposed to severe competition
+      not found W. Herbert, Dean of Manchester, on competition among plants (horticult
+      matched   Thomas Malthus, doctrine of population (An Essay on the Principle of P  → https://doi.org/10.2307/2173616
+      not found Carl Linnaeus, calculation of geometric increase of an annual plant
+      not found Dr. Hugh Falconer, on plants imported from America ranging from Cape C
+      matched   Authenticated statements on the rate of increase of feral cattle  → https://doi.org/10.1071/rj9930334
+      not found horses in South America
+      ambiguous Australia  → https://en.wikipedia.org/wiki/Australia
+      not found Darwin's own preceding chapter (chapter II) on individual variability 
+  3/4 logic review …
+      [high] Factual error in the provenance header. Gutenberg #1228 is t: Source: Project Gutenberg ebook #1228 ... (Gutenberg text fo
+      [medium] Arithmetical error, known and admitted in Darwin's own time:: if this be so, at the end of the fifth century there would b
+      [low] Internal arithmetic weakness (an understatement). Doubling e: Even slow-breeding man has doubled in twenty-five years, and
+      [low] Unsupported step within the excerpt: the authentication is a: if the statements of the rate of increase of slow-breeding c
+      [low] Unsupported step, judged by the knowledge of its own time: n: any variation, however slight ... if it be in any degree pro
+  4/4 rewrite: 5 passage(s) …
+      passage 1/5: 349 words
+      passage 2/5: 515 words
+      passage 3/5: 432 words
+      passage 4/5: 470 words
+      passage 5/5: 120 words
+  written: eval/machinize/darwin-origin-ch3-machinized-claude.md (1900 words in, 1941 out); report: eval/machinize/darwin-origin-ch3-machinized-claude-report.md
+  carry-over: 0 of 62 source sentences verbatim (0%), 1 of 11 paragraphs
+  verified: 25 claims read; 11 sources cited, 2 matched, 1 ambiguous, 8 not found, 0 unchecked; 5 issue(s) (1 high): 3 corrected in the text, 2 left for a person (see the report)
+  style tells (weak, for the record only): source 0 → out 6
+  signed: 2 record(s) (producer.kind=machinized, derived_from + verification on the record); run: python3 nohumanwrites.py check eval/machinize/darwin-origin-ch3-machinized-claude.md --label
+exit 0

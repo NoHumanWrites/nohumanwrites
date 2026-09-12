@@ -1,0 +1,83 @@
+{
+ "ollama": {
+  "engine": "ollama",
+  "model": "huihui_ai/qwen2.5-abliterate:14b",
+  "ts": "2026-09-12T08:18:26Z",
+  "output": "eval/machinize/darwin-origin-ch3-machinized.md",
+  "report": "eval/machinize/darwin-origin-ch3-machinized-report.md",
+  "derived_from": {
+   "carry_over": {
+    "sentences": 62,
+    "sentences_verbatim": 0,
+    "unit": "paragraph",
+    "units": 11,
+    "units_verbatim": 1
+   },
+   "declared": "human",
+   "path": "eval/machinize/darwin-origin-ch3.md",
+   "sha256": "4226aaa34ca68967a297900db41f6f5e2abe445534039c26c2498bdb6f2307b6",
+   "units": 11
+  },
+  "verification": {
+   "claims": 10,
+   "corrections_applied": 0,
+   "issues": 0,
+   "issues_high": 0,
+   "needs_evidence": 0,
+   "sources_ambiguous": 3,
+   "sources_cited": 5,
+   "sources_matched": 2,
+   "sources_not_found": 0,
+   "sources_unchecked": 0
+  },
+  "words_in": 1900,
+  "words_out": 1727,
+  "style_score_weak": {
+   "source": 0,
+   "out": 15
+  },
+  "units_attested": "11 of 11",
+  "ai_grade": "100 Pure derived"
+ },
+ "claude": {
+  "engine": "claude",
+  "model": null,
+  "ts": "2026-09-12T08:17:04Z",
+  "output": "eval/machinize/darwin-origin-ch3-machinized-claude.md",
+  "report": "eval/machinize/darwin-origin-ch3-machinized-claude-report.md",
+  "derived_from": {
+   "carry_over": {
+    "sentences": 62,
+    "sentences_verbatim": 0,
+    "unit": "paragraph",
+    "units": 11,
+    "units_verbatim": 1
+   },
+   "declared": "human",
+   "path": "eval/machinize/darwin-origin-ch3.md",
+   "sha256": "4226aaa34ca68967a297900db41f6f5e2abe445534039c26c2498bdb6f2307b6",
+   "units": 11
+  },
+  "verification": {
+   "claims": 25,
+   "corrections_applied": 3,
+   "issues": 5,
+   "issues_high": 1,
+   "needs_evidence": 2,
+   "sources_ambiguous": 1,
+   "sources_cited": 11,
+   "sources_matched": 2,
+   "sources_not_found": 8,
+   "sources_unchecked": 0
+  },
+  "words_in": 1900,
+  "words_out": 1941,
+  "style_score_weak": {
+   "source": 0,
+   "out": 6
+  },
+  "units_attested": "11 of 11",
+  "ai_grade": "100 Pure derived"
+ },
+ "_note": "Source: eval/machinize/darwin-origin-ch3.md (Darwin, Origin of Species, ch. III opening, Gutenberg #1228 = 1859 first edition; the header in the source file wrongly says the text follows the 1872 sixth edition, an error the claude engine caught and corrected in its output). Style scores from sloptrim detect.py (weak layer). Runs of 2026-09-12; ollama = huihui_ai/qwen2.5-abliterate:14b (Qwen2.5 14B), claude = claude CLI default model."
+}
