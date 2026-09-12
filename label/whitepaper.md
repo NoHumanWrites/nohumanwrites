@@ -146,7 +146,7 @@ v0.2 (6 September 2026). After the eight-model review: the label certifies a cha
 5. Coalition for Content Provenance and Authenticity. *C2PA Technical Specification 2.2.* c2pa.org. The absence of a text or source-file profile is the author's reading of the specification.
 6. S. Dathathri et al. *Scalable watermarking for identifying large language model outputs.* Nature, October 2024, doi:10.1038/s41586-024-08025-4; Anthropic Help Center, *How Claude marks AI-generated content*, article 16266773, accessed 14 August 2026.
 7. IPTC. *European AI Office releases Code of Practice on Transparency of AI-Generated Content.* iptc.org/news, 10 June 2026, accessed 6 September 2026. Both quotations verbatim.
-8. A. Chrétien (Plus de Fun Agency). *NoHumanWrites: find the human in machine-written work.* v0.2.2, September 2026, doi:10.5281/zenodo.22362427, sections 5, 6, 10.2, 10.3, and the repository's `SECURITY.md`.
+8. A. Chrétien (Plus de Fun Agency). *NoHumanWrites: find the human in machine-written work.* v0.3, 12 September 2026, doi:10.5281/zenodo.22725556 (concept doi:10.5281/zenodo.22362427), sections 5, 6, 10.2, 10.3, and the repository's `SECURITY.md`.
 9. V. S. Sadasivan, A. Kumar, S. Balasubramanian, W. Wang, S. Feizi. *Can AI-Generated Text be Reliably Detected?* arXiv:2303.11156, 2023.
 10. S. Pichai. *Alphabet Q3 2024 earnings call, CEO remarks.* 29 October 2024, blog.google/inside-google/message-ceo/alphabet-earnings-q3-2024/, accessed 6 September 2026. Primary; quoted verbatim.
 11. M. Zeff. *Microsoft CEO says up to 30 % of the company's code was written by AI.* TechCrunch, 29 April 2025, accessed 6 September 2026.

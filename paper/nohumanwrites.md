@@ -1,6 +1,6 @@
 # NoHumanWrites: write-time provenance for agent-written work, and why detection cannot find the human
 
-Arnaud Chrétien · Plus de Fun Agency, Geneva · draft v0.3 (after two external reviews; §11 added) · 12 September 2026
+Arnaud Chrétien · Plus de Fun Agency, Geneva · draft v0.3 (after two external reviews; §11 added) · 12 September 2026 · doi:10.5281/zenodo.22725556 (this version; concept doi:10.5281/zenodo.22362427)
 Code and data: `~/nohumanwrites` (to be published under Apache-2.0). An experience report from one developer's machine, not a controlled study; the numbers are coverage measurements and are labelled as such.
 
 ## Abstract
