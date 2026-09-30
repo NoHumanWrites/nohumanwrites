@@ -5,6 +5,7 @@
   python3 nohumanwrites.py check <path>...              score files or a directory
   python3 nohumanwrites.py check <path> --json          machine-readable
   python3 nohumanwrites.py check <path> --badge         one-line badge for a README (refused when there is no score)
+  python3 nohumanwrites.py check <path> --fail-under N  exit 1 when the attested share is below N% (for CI); no score fails too
   python3 nohumanwrites.py check <path> --label         AI Grade label (label/README.md): the attested share as a whole
                                                         number, banded Pure 100 / High 90-99 / Mixed 50-89; refused without
                                                         a signed ledger under your own trust root, or below 50
@@ -60,11 +61,11 @@ channel with no hook; this tool never says "human".  Standard library + OpenSSH.
 from __future__ import annotations
 import json, os, re, subprocess, sys, tempfile, time
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from nhw import attest, verify  # noqa: E402
-from nhw.common import hunk_sha, MIN_LEN, norm_text, read_text, repo_root, profile_for, decode_text  # noqa: E402
+from nhw.common import hunk_sha, MIN_LEN, norm_text, read_text, repo_root, profile_for  # noqa: E402
 
 SKIP_DIRS = {"node_modules", "__pycache__", "dist", "build", ".git", ".nhw"}
 EXPORT_EXT = {".docx", ".epub", ".odt"}                       # zipped-XML documents: paragraphs are extracted
@@ -415,7 +416,7 @@ def stream_card(url):
             declared["catalogue"] = f"{art.get('nb_album')} releases on Deezer" + (f", {dates[0]} → {dates[-1]}" if dates else "") + f"; {art.get('nb_fan')} fans"
     except Exception:
         pass
-    print(f"NoHumanWrites — provenance card for a streamed track")
+    print("NoHumanWrites — provenance card for a streamed track")
     print(f"  {declared.get('title')} — {', '.join(declared.get('artists', []))}  ({declared.get('duration')})")
     print("  DECLARED by the platforms (claims, not provenance):")
     for k in ("label", "release_date", "isrc", "contributors", "catalogue"):
@@ -502,12 +503,12 @@ def _web_report(final, meta, paras, repo, explicit, trust_repo):
     print("  DECLARED (claims, not provenance):")
     for k in ("author", "published", "generator", "creditText", "creativeWorkStatus"):
         if meta.get(k): print(f"    {k:13s} {meta[k]}")
-    print(f"    disclosure    " + (", ".join(meta["ai_disclosure_hints"]) if meta.get("ai_disclosure_hints") else "no AI-disclosure wording or credential tags found on the page"))
+    print("    disclosure    " + (", ".join(meta["ai_disclosure_hints"]) if meta.get("ai_disclosure_hints") else "no AI-disclosure wording or credential tags found on the page"))
     if meta.get("og_image"):
         try:
             img, _, _ = _fetch(meta["og_image"])
             cc = any(x in img for x in (b"c2pa", b"contentauth", b"jumb\x00\x00\x00", b"C2PA", b"trainedAlgorithmicMedia"))
-            print(f"    lead image    " + ("carries a C2PA / IPTC provenance marker (verify with c2patool)" if cc else "no Content Credentials"))
+            print("    lead image    " + ("carries a C2PA / IPTC provenance marker (verify with c2patool)" if cc else "no Content Credentials"))
         except Exception:
             pass
     print("  VERIFIABLE against your ledger:")
@@ -588,7 +589,8 @@ def _opt(args, name):
 def cmd_check(args):
     flags = {a for a in args if a.startswith("--")}
     explicit = _opt(args, "--signers"); profile = _opt(args, "--profile"); repo_opt = _opt(args, "--repo")
-    skip = {"--signers", "--profile", "--repo", "--seal"}
+    skip = {"--signers", "--profile", "--repo", "--seal", "--fail-under"}
+    floor = _opt(args, "--fail-under")
     paths = [a for i, a in enumerate(args) if not a.startswith("--") and not (i > 0 and args[i - 1] in skip)] or ["."]
     ledger_repo = repo_root(repo_opt) if repo_opt else None
     if len(paths) == 1 and paths[0].startswith(("http://", "https://")):
@@ -616,8 +618,21 @@ def cmd_check(args):
                 cc = m["content_credentials"]
                 print(f"  {m['file']}: " + ("carries a C2PA Content Credentials manifest (verify with c2patool)" if cc else "no Content Credentials manifest found — no provenance"))
             return 0
-    return render(res, badge="--badge" in flags, as_json="--json" in flags, label="--label" in flags,
-                  seal=_opt(args, "--seal"), offline="--offline" in flags)
+    rc = render(res, badge="--badge" in flags, as_json="--json" in flags, label="--label" in flags,
+                seal=_opt(args, "--seal"), offline="--offline" in flags)
+    if floor is None:
+        return rc
+    # --fail-under: a CI floor. Anything but a verified score below the floor is a failure, including "no score".
+    try:
+        floor = float(floor)
+    except ValueError:
+        print("--fail-under needs a number (a percentage)", file=sys.stderr); return 2
+    if rc or res is None or res.get("state") != "scored" or not res.get("lines"):
+        print(f"  floor {floor:g}%: no verified score, failing", file=sys.stderr); return 1
+    pct = 100 * (res["lines"] - res["unattested"]) / res["lines"]
+    if pct < floor:
+        print(f"  floor {floor:g}%: {pct:.1f}% attested is below it, failing", file=sys.stderr); return 1
+    return 0
 
 
 def cmd_import(args):

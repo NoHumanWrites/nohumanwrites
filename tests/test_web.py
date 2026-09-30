@@ -4,7 +4,7 @@
 
 Run:  python3 tests/test_web.py     (exit 0 = pass)
 """
-import io, json, os, shutil, subprocess, sys, tempfile, contextlib
+import io, os, shutil, subprocess, sys, tempfile, contextlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLI = os.path.join(ROOT, "nohumanwrites.py")
