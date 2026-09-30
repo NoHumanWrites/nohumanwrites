@@ -37,6 +37,8 @@
   python3 nohumanwrites.py anchor [--quiet]             Level 2: sign the ledger head and record it in Sigstore Rekor
                                                         (.nhw/anchors.jsonl; commit it). --label then verifies the anchor.
   python3 nohumanwrites.py setup --anchor               also install a git post-commit hook that anchors after each commit
+  python3 nohumanwrites.py setup --guard                install a git pre-commit hook: staged docs/ stay attested above the
+                                                        CI floor and the ledger is staged with them (nhw/precommit.py)
   python3 nohumanwrites.py check <path> --label --offline   do not contact Rekor (anchor checked locally only)
   python3 nohumanwrites.py setup --level3               Level 3 (local): sandbox block in <repo>/.claude/settings.json that
                                                         denies the model's shell the signing key; the hook then records an
@@ -61,7 +63,7 @@ channel with no hook; this tool never says "human".  Standard library + OpenSSH.
 from __future__ import annotations
 import json, os, re, subprocess, sys, tempfile, time
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from nhw import attest, verify  # noqa: E402
@@ -718,9 +720,35 @@ def cmd_anchor(args):
     return anchor_mod.anchor(repo, hook.KEY, hook.fingerprint(), quiet="--quiet" in args)
 
 
+def hooks_dir(repo):
+    """The clone's hooks directory, shared by its worktrees (inside a worktree, .git is a file that points at it)."""
+    r = subprocess.run(["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, cwd=repo)
+    common = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else ".git"
+    hooks = os.path.join(repo, common, "hooks") if not os.path.isabs(common) else os.path.join(common, "hooks")
+    os.makedirs(hooks, exist_ok=True)
+    return hooks
+
+
+def install_pre_commit(repo):
+    """A git pre-commit hook: staged pages stay attested above the CI floor, with the ledger staged too (nhw/precommit.py)."""
+    path = os.path.join(hooks_dir(repo), "pre-commit")
+    # the committing repo's own copy when it carries one (this repo, worktrees included); otherwise the tool that installed it
+    line = (f'NHW="$(git rev-parse --show-toplevel)/nhw/precommit.py"; [ -f "$NHW" ] || NHW="{os.path.join(HERE, "nhw", "precommit.py")}"\n'
+            'python3 "$NHW" || exit 1\n')
+    existing = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
+    if "nhw/precommit.py" in existing:
+        print(f"commit guard already installed in {path}"); return 0
+    with open(path, "a", encoding="utf-8") as f:
+        if not existing:
+            f.write("#!/bin/sh\n")
+        f.write("# NoHumanWrites guard: staged docs/ stay attested above the floor, ledger staged with them\n" + line)
+    os.chmod(path, 0o755)
+    print(f"commit guard installed in {path}"); return 0
+
+
 def install_post_commit(repo):
     """A git post-commit hook that anchors the ledger after every commit (best effort, never blocks the commit)."""
-    hooks = os.path.join(repo, ".git", "hooks"); os.makedirs(hooks, exist_ok=True)
+    hooks = hooks_dir(repo)
     path = os.path.join(hooks, "post-commit")
     line = f'python3 "{os.path.join(HERE, "nohumanwrites.py")}" anchor --quiet --repo "$(git rev-parse --show-toplevel)" || true\n'
     existing = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
@@ -771,6 +799,11 @@ def cmd_setup(args=()):
         if not repo:
             print("--level3 needs to run inside a git repository"); return 2
         return install_level3(repo)
+    if "--guard" in args:
+        repo = repo_root(os.getcwd())
+        if not repo:
+            print("--guard needs to run inside a git repository"); return 2
+        return install_pre_commit(repo)
     if "--anchor" in args:
         repo = repo_root(os.getcwd())
         if not repo:
