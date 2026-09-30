@@ -70,13 +70,16 @@ The grade counts the channel, as always. What changes is that the report and the
 
 What this cannot do, on purpose: look at a poem nobody signed and tell you whether a person wrote it. Nothing can (paper §6). It tells you what changed after the machine's version was signed, which is the question a publisher, a co-writer or a rights holder can act on.
 
-Keep the number in a pull request with a two-line GitHub Action:
+Keep the number in a pull request with the Action, one `uses:` line, pinned to a release:
 
 ```yaml
-- run: python3 nohumanwrites/nohumanwrites.py check . --signers .nhw/allowed_signers --fail-under 90
+- uses: NoHumanWrites/nohumanwrites@v0.3.2
+  with:
+    path: docs          # what to score; default "."
+    fail-under: 95      # the floor; default 90
 ```
 
-`--fail-under` turns the number into a gate: the job fails below the floor, and it fails when there is no verified score at all (no ledger, or a ledger none of the given keys verify). Commit the public keys you trust as `.nhw/allowed_signers` so the runner verifies against the same root you do.
+The step fails below the floor, and it fails when there is no verified score at all (no ledger, or a ledger none of the trusted keys verify). It verifies against `.nhw/allowed_signers` in your repository, so commit the public keys you trust there and the runner checks against the same root you do. The job summary lists every file with unattested units; `outputs.attested` carries the number for later steps. The same gate from a shell: `python3 nohumanwrites.py check . --signers .nhw/allowed_signers --fail-under 90`.
 
 ## Layout
 

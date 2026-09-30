@@ -61,7 +61,7 @@ channel with no hook; this tool never says "human".  Standard library + OpenSSH.
 from __future__ import annotations
 import json, os, re, subprocess, sys, tempfile, time
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from nhw import attest, verify  # noqa: E402
