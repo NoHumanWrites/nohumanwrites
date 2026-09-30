@@ -17,7 +17,7 @@ Silent until setup-key.sh has created the key.
 """
 from __future__ import annotations
 import base64
-import json, datetime, fcntl, json, os, re, subprocess, sys, tempfile
+import datetime, fcntl, json, os, re, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from nhw.common import (NAMESPACE, hunk_sha, line_key, norm_text, read_text, repo_root, inside,  # noqa: E402

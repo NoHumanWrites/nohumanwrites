@@ -73,9 +73,10 @@ What this cannot do, on purpose: look at a poem nobody signed and tell you wheth
 Keep the number in a pull request with a two-line GitHub Action:
 
 ```yaml
-- run: python3 nohumanwrites/nohumanwrites.py check . --json > nhw.json
-- run: python3 -c "import json;r=json.load(open('nhw.json'));print(f\"{100*(r['lines']-r['unattested'])/r['lines']:.0f}% attested\")"
+- run: python3 nohumanwrites/nohumanwrites.py check . --signers .nhw/allowed_signers --fail-under 90
 ```
+
+`--fail-under` turns the number into a gate: the job fails below the floor, and it fails when there is no verified score at all (no ledger, or a ledger none of the given keys verify). Commit the public keys you trust as `.nhw/allowed_signers` so the runner verifies against the same root you do.
 
 ## Layout
 

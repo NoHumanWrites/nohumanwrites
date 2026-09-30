@@ -6,7 +6,7 @@ words, no markdown structure, no pasted headers).
 AI corpus     = what Claude answered (assistant text blocks, 40-300 words).
 Both scored with the sloptrim AI-tell detector.  Reports distributions + AUC.
 """
-import json, glob, os, sys, random, re, subprocess, statistics as st
+import json, glob, os, sys, random, re
 sys.path.insert(0, os.path.expanduser("~/nohumanwrites"))
 from nhw.stat import sloptrim_score, burstiness
 random.seed(7)

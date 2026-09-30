@@ -1,0 +1,5 @@
+# pyflakes-class errors only: undefined names, unused imports, syntax. Style stays the author's.
+target-version = "py39"
+
+[lint]
+select = ["E9", "F"]

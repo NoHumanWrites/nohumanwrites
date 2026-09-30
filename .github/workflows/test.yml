@@ -14,8 +14,12 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: ssh -V
       - run: python3 -m py_compile nohumanwrites.py cli.py nhw/*.py
+      - run: pip install ruff && ruff check .
       - run: python3 tests/test_ledger.py
       - run: python3 tests/test_creative.py
       - run: python3 tests/test_web.py
       - run: python3 tests/test_machinize.py
-      - run: python3 nohumanwrites.py check . --json > /dev/null
+      - run: python3 tests/check_docs.py
+      # the published pages must stay attested: the ledger is verified against the trust root committed in the repo
+      - run: python3 nohumanwrites.py check docs --signers .nhw/allowed_signers --fail-under 95
+      - run: python3 nohumanwrites.py check . --signers .nhw/allowed_signers

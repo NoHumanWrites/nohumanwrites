@@ -132,16 +132,19 @@ def main():
             def do_GET(self):
                 uuid = self.path.rsplit("/", 1)[-1]
                 self._send(200, {uuid: store[uuid]}) if uuid in store else self._send(404, {"message": "no such entry"})
-        srv = http.server.HTTPServer(("127.0.0.1", 0), FakeRekor); threading.Thread(target=srv.serve_forever, daemon=True).start()
-        env_rekor = dict(env, NHW_REKOR=f"http://127.0.0.1:{srv.server_port}")
-        r = run([sys.executable, CLI, "anchor", "--repo", repo], env=env_rekor, cwd=repo)
-        assert r.returncode == 0 and "Rekor index 1" in r.stdout and os.path.exists(os.path.join(repo, ".nhw", "anchors.jsonl")), r.stdout + r.stderr; checks += 1
-        r = run([sys.executable, CLI, "check", clean, "--label"], env=env_rekor)
-        assert "Level 2 (anchored" in r.stdout and "inclusion verified" in r.stdout, r.stdout + r.stderr; checks += 1
-        b = bytearray(open(ledger, "rb").read()); i = b.find(b'"path"'); b[i + 1] = ord("P"); open(ledger, "wb").write(bytes(b))
-        r = run([sys.executable, CLI, "check", clean, "--label"], env=env_rekor)
-        assert "Level 1" in r.stdout and "prefix no longer matches" in r.stdout, r.stdout + r.stderr; checks += 1
-        srv.shutdown()
+        if os.environ.get("NHW_TEST_NO_NET"):
+            print("skipped: fake Rekor fixture needs a loopback socket (NHW_TEST_NO_NET is set)")
+        else:
+            srv = http.server.HTTPServer(("127.0.0.1", 0), FakeRekor); threading.Thread(target=srv.serve_forever, daemon=True).start()
+            env_rekor = dict(env, NHW_REKOR=f"http://127.0.0.1:{srv.server_port}")
+            r = run([sys.executable, CLI, "anchor", "--repo", repo], env=env_rekor, cwd=repo)
+            assert r.returncode == 0 and "Rekor index 1" in r.stdout and os.path.exists(os.path.join(repo, ".nhw", "anchors.jsonl")), r.stdout + r.stderr; checks += 1
+            r = run([sys.executable, CLI, "check", clean, "--label"], env=env_rekor)
+            assert "Level 2 (anchored" in r.stdout and "inclusion verified" in r.stdout, r.stdout + r.stderr; checks += 1
+            b = bytearray(open(ledger, "rb").read()); i = b.find(b'"path"'); b[i + 1] = ord("P"); open(ledger, "wb").write(bytes(b))
+            r = run([sys.executable, CLI, "check", clean, "--label"], env=env_rekor)
+            assert "Level 1" in r.stdout and "prefix no longer matches" in r.stdout, r.stdout + r.stderr; checks += 1
+            srv.shutdown()
 
         # 16. Level 3 (local): the hook records an executor claim only when the effective settings deny it the key
         iso = os.path.join(repo, "iso.py"); open(iso, "w").write(BODY); hook(env, iso, content=BODY)
