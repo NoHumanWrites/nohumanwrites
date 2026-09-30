@@ -25,7 +25,7 @@ jobs:
         uses: ./
         continue-on-error: true
         with:
-          path: docs
+          path: docs/index.html   # a file with ledger records; an empty trust root can verify none of them
           fail-under: "1"
           signers: /dev/null
-      - run: test "${{ steps.nokeys.outcome }}" = failure && test "${{ steps.nokeys.outputs.state }}" != scored
+      - run: test "${{ steps.nokeys.outcome }}" = failure && test "${{ steps.nokeys.outputs.state }}" = unverifiable
