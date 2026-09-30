@@ -146,6 +146,21 @@ def main():
             assert "Level 1" in r.stdout and "prefix no longer matches" in r.stdout, r.stdout + r.stderr; checks += 1
             srv.shutdown()
 
+        # 15b. the commit guard: an unsigned staged page is refused; signed and with the ledger staged, it commits
+        g = os.path.join(work, "guarded"); os.makedirs(os.path.join(g, "docs")); run(["git", "init", "-q", g])
+        run(["git", "-C", g, "config", "user.email", "t@x"]); run(["git", "-C", g, "config", "user.name", "t"])
+        r = run([sys.executable, CLI, "setup", "--guard"], cwd=g, env=env)
+        assert r.returncode == 0 and os.path.exists(os.path.join(g, ".git", "hooks", "pre-commit")), r.stdout + r.stderr; checks += 1
+        page = os.path.join(g, "docs", "a.html"); open(page, "w").write("<p>typed by hand</p>\n" * 3)
+        os.makedirs(os.path.join(g, ".nhw"), exist_ok=True); shutil.copy(os.path.join(home, ".nhw", "allowed_signers"), os.path.join(g, ".nhw", "allowed_signers"))
+        run(["git", "-C", g, "add", "-A"]); r = run(["git", "-C", g, "commit", "-q", "-m", "unsigned"], env=env)
+        assert r.returncode != 0 and "guard" in r.stderr and "import" in r.stderr, r.stdout + r.stderr; checks += 1  # git routes hook output to stderr
+        r = run([sys.executable, CLI, "import", page, "--from", "test"], env=env); assert r.returncode == 0, r.stdout + r.stderr
+        r = run(["git", "-C", g, "commit", "-q", "-m", "signed but ledger unstaged"], env=env)
+        assert r.returncode != 0 and "unstaged" in r.stderr, r.stdout + r.stderr; checks += 1
+        run(["git", "-C", g, "add", ".nhw"]); r = run(["git", "-C", g, "commit", "-q", "-m", "signed"], env=env)
+        assert r.returncode == 0, r.stdout + r.stderr; checks += 1
+
         # 16. Level 3 (local): the hook records an executor claim only when the effective settings deny it the key
         iso = os.path.join(repo, "iso.py"); open(iso, "w").write(BODY); hook(env, iso, content=BODY)
         assert "executor" not in open(ledger).read().splitlines()[-1], "executor claimed without a sandbox"; checks += 1

@@ -79,7 +79,7 @@ Keep the number in a pull request with the Action, one `uses:` line, pinned to a
     fail-under: 95      # the floor; default 90
 ```
 
-The step fails below the floor, and it fails when there is no verified score at all (no ledger, or a ledger none of the trusted keys verify). It verifies against `.nhw/allowed_signers` in your repository, so commit the public keys you trust there and the runner checks against the same root you do. The job summary lists every file with unattested units; `outputs.attested` carries the number for later steps. The same gate from a shell: `python3 nohumanwrites.py check . --signers .nhw/allowed_signers --fail-under 90`.
+The step fails below the floor, and it fails when there is no verified score at all (no ledger, or a ledger none of the trusted keys verify). It verifies against `.nhw/allowed_signers` in your repository, so commit the public keys you trust there and the runner checks against the same root you do. The job summary lists every file with unattested units; `outputs.attested` carries the number for later steps. The same gate from a shell: `python3 nohumanwrites.py check . --signers .nhw/allowed_signers --fail-under 90`. The same gate before the commit leaves your machine: `python3 nohumanwrites.py setup --guard` installs a pre-commit hook that refuses a commit dropping `docs/` below the floor and tells you what to sign.
 
 ## Layout
 
