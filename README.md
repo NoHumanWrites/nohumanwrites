@@ -73,7 +73,7 @@ What this cannot do, on purpose: look at a poem nobody signed and tell you wheth
 Keep the number in a pull request with the Action, one `uses:` line, pinned to a release:
 
 ```yaml
-- uses: NoHumanWrites/nohumanwrites@v0.3.2
+- uses: NoHumanWrites/nohumanwrites@v0.3.3
   with:
     path: docs          # what to score; default "."
     fail-under: 95      # the floor; default 90

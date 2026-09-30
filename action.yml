@@ -1,5 +1,5 @@
 name: NoHumanWrites check
-description: Fail the job when the attested share of machine-written text falls below a floor, verified against the trust root committed in your repo.
+description: Fail the job when the attested share of machine-written text drops below a floor, checked against your committed keys.
 author: Plus de Fun Agency
 branding:
   icon: shield
