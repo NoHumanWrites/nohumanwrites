@@ -98,12 +98,12 @@ footer{flex-direction:column;gap:8px}
   <nav aria-label="Main navigation">
     <a href="#try">Try locally</a>
     <a href="https://github.com/NoHumanWrites/nohumanwrites#readme">Documentation</a>
-    <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.0/paper/nohumanwrites.md">Paper ↗</a>
+    <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.2/paper/nohumanwrites.md">Paper ↗</a>
   </nav>
 </header>
 <main id="main">
   <section class="hero" aria-labelledby="intro-title">
-    <p class="eyebrow">OPEN SOURCE · <a href="https://github.com/NoHumanWrites/nohumanwrites/releases/tag/v0.3.0">v0.3.0 · 12 September 2026</a></p>
+    <p class="eyebrow">OPEN SOURCE · <a href="https://github.com/NoHumanWrites/nohumanwrites/releases/tag/v0.3.2">v0.3.2 · 30 September 2026</a></p>
     <h1 id="intro-title">See which parts of a work have a signed record.</h1>
     <p class="intro">Check code and writing against records made when it was written. Find the matching parts, see what changed, and bring the gaps into your review.</p>
     <div class="actions"><a class="primary" href="#try">Try it locally ↓</a><a href="#example">See a worked example</a></div>
@@ -128,22 +128,25 @@ footer{flex-direction:column;gap:8px}
 
   <section id="try" class="section" aria-labelledby="try-title">
     <div class="steps">
-      <div><h2 id="try-title">Start with a local check.</h2><p style="margin-top:18px">Clone the released version and point it at a project on your machine. You need Git, Python 3.9 or newer, and OpenSSH for signature verification.</p><p class="small">There is no upload form or hosted scoring service here. <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.0/SECURITY.md">Read the trust model ↗</a></p></div>
-      <div><pre tabindex="0" aria-label="Local installation and check commands; scroll horizontally for long lines"><code>git clone --branch v0.3.0 \
+      <div><h2 id="try-title">Start with a local check.</h2><p style="margin-top:18px">Clone the released version and point it at a project on your machine. You need Git, Python 3.9 or newer, and OpenSSH for signature verification.</p><p class="small">There is no upload form or hosted scoring service here. <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.2/SECURITY.md">Read the trust model ↗</a></p></div>
+      <div><pre tabindex="0" aria-label="Local installation and check commands; scroll horizontally for long lines"><code>git clone --branch v0.3.2 \
   https://github.com/NoHumanWrites/nohumanwrites.git
 cd nohumanwrites
-python3 nohumanwrites.py check /path/to/your-project</code></pre><p><strong>No records yet?</strong> The result may be “no provenance.” Existing unsigned harness logs are identified as such; they are a different kind of evidence from the signed example above.</p><a href="https://github.com/NoHumanWrites/nohumanwrites#try-it-in-ten-seconds">Set up recording for future edits ↗</a></div>
+python3 nohumanwrites.py check /path/to/your-project</code></pre><p><strong>No records yet?</strong> The result may be “no provenance.” Existing unsigned harness logs are identified as such; they are a different kind of evidence from the signed example above.</p><p style="margin-top:18px"><strong>In a pull request:</strong> one line in a workflow holds the attested share of a folder above a floor and fails the job below it. Verification runs against the public keys committed in your repository.</p><pre tabindex="0" aria-label="GitHub Action step"><code>- uses: NoHumanWrites/nohumanwrites@v0.3.2
+  with:
+    path: docs
+    fail-under: 95</code></pre><a href="https://github.com/NoHumanWrites/nohumanwrites#try-it-in-ten-seconds">Set up recording for future edits ↗</a></div>
     </div>
   </section>
 
   <section class="section" aria-label="Documentation and research">
     <div class="routes">
-      <div><h3>Use the tool</h3><p>Follow the command reference, check the trust rules, or explore <a href="label.html">AI Grade</a>, the label for the signed share of a work.</p><a href="https://github.com/NoHumanWrites/nohumanwrites#readme">Read the documentation ↗</a><p class="release-note">v0.3.0 also includes <code>machinize</code>: a signed rewrite with its source and verification report recorded. See the <a href="https://github.com/NoHumanWrites/nohumanwrites/releases/tag/v0.3.0">release notes</a>.</p></div>
-      <div><h3>Read the research</h3><p>The full paper explains the method, the limits and the measurements from one developer’s machine. Those measurements are an experience report, not a general accuracy benchmark.</p><a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.0/paper/nohumanwrites.md">Read the current paper · v0.3 ↗</a><p class="release-note">The earlier <a href="paper.html">web edition · v0.2.2</a> remains available in full.</p></div>
+      <div><h3>Use the tool</h3><p>Follow the command reference, check the trust rules, or explore <a href="label.html">AI Grade</a>, the label for the signed share of a work.</p><a href="https://github.com/NoHumanWrites/nohumanwrites#readme">Read the documentation ↗</a><p class="release-note">v0.3.0 also includes <code>machinize</code>: a signed rewrite with its source and verification report recorded. See the <a href="https://github.com/NoHumanWrites/nohumanwrites/releases/tag/v0.3.2">release notes</a>.</p></div>
+      <div><h3>Read the research</h3><p>The full paper explains the method, the limits and the measurements from one developer’s machine. Those measurements are an experience report, not a general accuracy benchmark.</p><a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.2/paper/nohumanwrites.md">Read the current paper · v0.3 ↗</a><p class="release-note">The earlier <a href="paper.html">web edition · v0.2.2</a> remains available in full.</p></div>
     </div>
   </section>
 </main>
-<footer><p>NoHumanWrites · Plus de Fun Agency</p><p><a href="https://github.com/NoHumanWrites/nohumanwrites">Source</a> · <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.0/LICENSE">Apache-2.0</a></p></footer>
+<footer><p>NoHumanWrites · Plus de Fun Agency</p><p><a href="https://github.com/NoHumanWrites/nohumanwrites">Source</a> · <a href="https://github.com/NoHumanWrites/nohumanwrites/blob/v0.3.2/LICENSE">Apache-2.0</a></p></footer>
 </div>
 </body>
 </html>
