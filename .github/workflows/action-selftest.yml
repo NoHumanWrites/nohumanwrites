@@ -1,0 +1,31 @@
+name: action-selftest
+on: [push, pull_request]
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: green at 95
+        id: nhw
+        uses: ./
+        with:
+          path: docs
+          fail-under: "95"
+      - run: test "${{ steps.nhw.outputs.state }}" = scored && test "${{ steps.nhw.outputs.attested }}" -ge 95
+      - name: red at 100
+        id: red
+        uses: ./
+        continue-on-error: true
+        with:
+          path: docs
+          fail-under: "100"
+      - run: test "${{ steps.red.outcome }}" = failure
+      - name: red without a trust root
+        id: nokeys
+        uses: ./
+        continue-on-error: true
+        with:
+          path: docs/index.html   # a file with ledger records; an empty trust root can verify none of them
+          fail-under: "1"
+          signers: /dev/null
+      - run: test "${{ steps.nokeys.outcome }}" = failure && test "${{ steps.nokeys.outputs.state }}" = unverifiable

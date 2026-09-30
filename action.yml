@@ -1,0 +1,29 @@
+name: NoHumanWrites check
+description: Fail the job when the attested share of machine-written text falls below a floor, verified against the trust root committed in your repo.
+author: Plus de Fun Agency
+branding:
+  icon: shield
+  color: gray-dark
+inputs:
+  path:
+    description: File or directory to score, relative to the repository.
+    default: "."
+  fail-under:
+    description: Minimum attested percentage. The step fails below it, and when there is no verified score at all.
+    default: "90"
+  signers:
+    description: allowed_signers file holding the public keys you trust, relative to the repository.
+    default: ".nhw/allowed_signers"
+outputs:
+  attested:
+    description: Attested percentage as a whole number, empty when there was no verified score.
+    value: ${{ steps.check.outputs.attested }}
+  state:
+    description: scored, unverifiable, or no-evidence.
+    value: ${{ steps.check.outputs.state }}
+runs:
+  using: composite
+  steps:
+    - id: check
+      shell: bash
+      run: python3 "$GITHUB_ACTION_PATH/nhw/ci.py" --path "${{ inputs.path }}" --fail-under "${{ inputs.fail-under }}" --signers "${{ inputs.signers }}"
